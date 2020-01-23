@@ -4,6 +4,9 @@
 #' explorar distribucion
 #' generar tablas epi por grupo (ctr,viv,fal)
 #' estimar diferencia promedio entre controles y casos en la primera visita
+#' 
+#' recomendacion
+#' set.seed(33)
 
 # packages ------------------------------------------------------------------
 
@@ -112,7 +115,7 @@ hem %>%
   ) +
   labs(title = "Trend of hematological profiles") +
   xlab("Time of follow-up") + ylab("Value")
-
+ggsave("figure/01-trend_plot-by_group.png",height = 6,width = 12)
 
 # tabla 2: por visita Pv+Pf -----------------------------------------------------
 
@@ -234,31 +237,31 @@ epi_tidymodel_coef <- function(wm1) {
 
 #plan: reportar modelos sin y con interacción (falta tabla sin!)
 
-## _hto visita*sp ----
+## _hematocrito ----
 
-#glm(hto. ~ edad + sexo, data = hem_cc_trd, family = gaussian(link = "identity")) %>% tidy()
-
-glm.full <- glm(hto. ~ diff_fecha + edad + sexo + group
-                , data = hem_cc_trd, family = gaussian(link = "identity"))
-glm.full %>% tidy()
-glm.full %>% confint_tidy()
-
-hto_01 <- epi_tidymodel_coef(glm.full) %>% 
-  filter(str_detect(term,"diff")) %>% 
-  select(term,estimate,starts_with("conf."),p.value) %>% 
-  mutate(outcome="hto") %>% 
-  print()
-
-glm.full <- glm(hto. ~ num.visita + edad + sexo + group
-                , data = hem_cc_trd, family = gaussian(link = "identity"))
-glm.full %>% tidy()
-glm.full %>% confint_tidy()
-
-hto_02 <- epi_tidymodel_coef(glm.full) %>% 
-  filter(str_detect(term,"num.v")) %>% 
-  select(term,estimate,starts_with("conf."),p.value) %>% 
-  mutate(outcome="hto") %>% 
-  print()
+# #glm(hto. ~ edad + sexo, data = hem_cc_trd, family = gaussian(link = "identity")) %>% tidy()
+# 
+# glm.full <- glm(hto. ~ diff_fecha + edad + sexo + group
+#                 , data = hem_cc_trd, family = gaussian(link = "identity"))
+# glm.full %>% tidy()
+# glm.full %>% confint_tidy()
+# 
+# hto_01 <- epi_tidymodel_coef(glm.full) %>% 
+#   filter(str_detect(term,"diff")) %>% 
+#   select(term,estimate,starts_with("conf."),p.value) %>% 
+#   mutate(outcome="hto") %>% 
+#   print()
+# 
+# glm.full <- glm(hto. ~ num.visita + edad + sexo + group
+#                 , data = hem_cc_trd, family = gaussian(link = "identity"))
+# glm.full %>% tidy()
+# glm.full %>% confint_tidy()
+# 
+# hto_02 <- epi_tidymodel_coef(glm.full) %>% 
+#   filter(str_detect(term,"num.v")) %>% 
+#   select(term,estimate,starts_with("conf."),p.value) %>% 
+#   mutate(outcome="hto") %>% 
+#   print()
 
 glm.full <- glm(hto. ~ diff_fecha*group + edad + sexo
                 , data = hem_cc_trd, family = gaussian(link = "identity"))
@@ -282,16 +285,16 @@ hto_2 <- epi_tidymodel_coef(glm.full) %>%
   mutate(outcome="hto") %>% 
   print()
 
-## _leuco tiempo+sp ----
-glm.full <- glm(leuco. ~ diff_fecha + edad + sexo
-                , data = hem_cc_trd, family = gaussian(link = "identity"))
-glm.full %>% tidy()
-glm.full %>% confint_tidy()
-
-glm.full <- glm(leuco. ~ diff_fecha + group + edad + sexo
-                , data = hem_cc_trd, family = gaussian(link = "identity"))
-glm.full %>% tidy()
-glm.full %>% confint_tidy()
+## _leucocitos ----
+# glm.full <- glm(leuco. ~ diff_fecha + edad + sexo
+#                 , data = hem_cc_trd, family = gaussian(link = "identity"))
+# glm.full %>% tidy()
+# glm.full %>% confint_tidy()
+# 
+# glm.full <- glm(leuco. ~ diff_fecha + group + edad + sexo
+#                 , data = hem_cc_trd, family = gaussian(link = "identity"))
+# glm.full %>% tidy()
+# glm.full %>% confint_tidy()
 
 
 glm.full <- glm(leuco. ~ diff_fecha*group + edad + sexo
@@ -317,16 +320,16 @@ leuco_2 <- epi_tidymodel_coef(glm.full) %>%
   mutate(outcome="leuco") %>% 
   print()
 
-## _abaston tiempo*sp ----
-glm.full <- glm(abaston. ~ diff_fecha + edad + sexo
-                , data = hem_cc_trd, family = gaussian(link = "identity"))
-glm.full %>% tidy()
-glm.full %>% confint_tidy()
-
-glm.full <- glm(abaston. ~ diff_fecha + group + edad + sexo
-                , data = hem_cc_trd, family = gaussian(link = "identity"))
-glm.full %>% tidy()
-glm.full %>% confint_tidy()
+## _abastonados ----
+# glm.full <- glm(abaston. ~ diff_fecha + edad + sexo
+#                 , data = hem_cc_trd, family = gaussian(link = "identity"))
+# glm.full %>% tidy()
+# glm.full %>% confint_tidy()
+# 
+# glm.full <- glm(abaston. ~ diff_fecha + group + edad + sexo
+#                 , data = hem_cc_trd, family = gaussian(link = "identity"))
+# glm.full %>% tidy()
+# glm.full %>% confint_tidy()
 
 glm.full <- glm(abaston. ~ diff_fecha*group + edad + sexo
                 , data = hem_cc_trd, family = gaussian(link = "identity"))
@@ -350,16 +353,16 @@ abaston_2 <- epi_tidymodel_coef(glm.full) %>%
   mutate(outcome="abaston") %>% 
   print()
 
-## _segment - no ----
-glm.full <- glm(segment. ~ diff_fecha + edad + sexo
-                , data = hem_cc_trd, family = gaussian(link = "identity"))
-glm.full %>% tidy()
-glm.full %>% confint_tidy()
-
-glm.full <- glm(segment. ~ diff_fecha + group + edad + sexo
-                , data = hem_cc_trd, family = gaussian(link = "identity"))
-glm.full %>% tidy()
-glm.full %>% confint_tidy()
+## _segmentados ----
+# glm.full <- glm(segment. ~ diff_fecha + edad + sexo
+#                 , data = hem_cc_trd, family = gaussian(link = "identity"))
+# glm.full %>% tidy()
+# glm.full %>% confint_tidy()
+# 
+# glm.full <- glm(segment. ~ diff_fecha + group + edad + sexo
+#                 , data = hem_cc_trd, family = gaussian(link = "identity"))
+# glm.full %>% tidy()
+# glm.full %>% confint_tidy()
 
 glm.full <- glm(segment. ~ diff_fecha*group + edad + sexo
                 , data = hem_cc_trd, family = gaussian(link = "identity"))
@@ -383,16 +386,16 @@ segment_2 <- epi_tidymodel_coef(glm.full) %>%
   mutate(outcome="segment") %>% 
   print()
 
-## _eosinof ----
-glm.full <- glm(eosinof. ~ diff_fecha + edad + sexo
-                , data = hem_cc_trd, family = gaussian(link = "identity"))
-glm.full %>% tidy()
-glm.full %>% confint_tidy()
-
-glm.full <- glm(eosinof. ~ diff_fecha + group + edad + sexo
-                , data = hem_cc_trd, family = gaussian(link = "identity"))
-glm.full %>% tidy()
-glm.full %>% confint_tidy()
+## _eosinofilos ----
+# glm.full <- glm(eosinof. ~ diff_fecha + edad + sexo
+#                 , data = hem_cc_trd, family = gaussian(link = "identity"))
+# glm.full %>% tidy()
+# glm.full %>% confint_tidy()
+# 
+# glm.full <- glm(eosinof. ~ diff_fecha + group + edad + sexo
+#                 , data = hem_cc_trd, family = gaussian(link = "identity"))
+# glm.full %>% tidy()
+# glm.full %>% confint_tidy()
 
 glm.full <- glm(eosinof. ~ diff_fecha*group + edad + sexo
                 , data = hem_cc_trd, family = gaussian(link = "identity"))
@@ -416,16 +419,16 @@ eosinof_2 <- epi_tidymodel_coef(glm.full) %>%
   mutate(outcome="eosinof") %>% 
   print()
 
-## _linfocit ----
-glm.full <- glm(linfocit. ~ diff_fecha + edad + sexo
-                , data = hem_cc_trd, family = gaussian(link = "identity"))
-glm.full %>% tidy()
-glm.full %>% confint_tidy()
-
-glm.full <- glm(linfocit. ~ diff_fecha + group + edad + sexo
-                , data = hem_cc_trd, family = gaussian(link = "identity"))
-glm.full %>% tidy()
-glm.full %>% confint_tidy()
+## _linfocitos ----
+# glm.full <- glm(linfocit. ~ diff_fecha + edad + sexo
+#                 , data = hem_cc_trd, family = gaussian(link = "identity"))
+# glm.full %>% tidy()
+# glm.full %>% confint_tidy()
+# 
+# glm.full <- glm(linfocit. ~ diff_fecha + group + edad + sexo
+#                 , data = hem_cc_trd, family = gaussian(link = "identity"))
+# glm.full %>% tidy()
+# glm.full %>% confint_tidy()
 
 glm.full <- glm(linfocit. ~ diff_fecha*group + edad + sexo
                 , data = hem_cc_trd, family = gaussian(link = "identity"))
@@ -450,15 +453,15 @@ linfocit_2 <- epi_tidymodel_coef(glm.full) %>%
   print()
 
 ## _plaqueta ----
-glm.full <- glm(plaqueta ~ diff_fecha + edad + sexo
-                , data = hem_cc_trd, family = gaussian(link = "identity"))
-glm.full %>% tidy()
-glm.full %>% confint_tidy()
-
-glm.full <- glm(plaqueta ~ diff_fecha + group + edad + sexo
-                , data = hem_cc_trd, family = gaussian(link = "identity"))
-glm.full %>% tidy()
-glm.full %>% confint_tidy()
+# glm.full <- glm(plaqueta ~ diff_fecha + edad + sexo
+#                 , data = hem_cc_trd, family = gaussian(link = "identity"))
+# glm.full %>% tidy()
+# glm.full %>% confint_tidy()
+# 
+# glm.full <- glm(plaqueta ~ diff_fecha + group + edad + sexo
+#                 , data = hem_cc_trd, family = gaussian(link = "identity"))
+# glm.full %>% tidy()
+# glm.full %>% confint_tidy()
 
 glm.full <- glm(plaqueta ~ diff_fecha*group + edad + sexo
                 , data = hem_cc_trd, family = gaussian(link = "identity"))

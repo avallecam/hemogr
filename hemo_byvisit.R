@@ -519,51 +519,51 @@ full_t3 %>%
   spread(new_col,value) %>% 
   xlsx::write.xlsx("table/h0-tab3_visitas.xls")
 
-# correlation term --------------------------------------------------------
-
-library(nlme)
-
-cs1 <- corARMA(c(0.2, 0.3, -0.1), form = ~ 1 | Mare, p = 1, q = 2)
-
-cs1ARMA <- corARMA(0.4, form = ~ 1 | Subject, q = 1)
-cs1ARMA <- Initialize(cs1ARMA, data = Orthodont)
-corMatrix(cs1ARMA)
-
-cs2ARMA <- corARMA(c(0.8, 0.4), form = ~ 1 | Subject, p=1, q=1)
-cs2ARMA <- Initialize(cs2ARMA, data = Orthodont)
-corMatrix(cs2ARMA)
-
-fm1Ovar.lme <- lme(follicles ~ sin(2*pi*Time) + cos(2*pi*Time),
-                   data = Ovary, random = pdDiag(~sin(2*pi*Time)))
-fm5Ovar.lme <- update(fm1Ovar.lme,
-                      corr = corARMA(p = 1, q = 1))
-
-Seatbelts.df <- data.frame(Seatbelts)
-Seatbelts.df %>% as_tibble()
-Seatbelts.df$t <- 1:(dim(Seatbelts.df)[1])
-Seatbelts.df %>% as_tibble()
-m <- gls(drivers ~ kms + PetrolPrice + law,
-         data=Seatbelts.df,
-         correlation=corARMA(p=1, q=0, form=~t))
-summary(m)
-
-
-
-# gee ---------------------------------------------------------------------
-
-library(geepack)
-
-#?geeglm
-
-data(dietox)
-dietox$Cu     <- as.factor(dietox$Cu)
-mf <- formula(Weight~Cu*(Time+I(Time^2)+I(Time^3)))
-gee1 <- geeglm(mf, data=dietox, id=Pig, family=poisson("identity"),corstr="ar1")
-gee1
-summary(gee1)
-str(gee1)
-
-mf2 <- formula(Weight~Cu*Time+I(Time^2)+I(Time^3))
-gee2 <- geeglm(mf2, data=dietox, id=Pig, family=poisson("identity"),corstr="unstructured")
-anova(gee2)
-class(gee2)
+# # correlation term --------------------------------------------------------
+# 
+# library(nlme)
+# 
+# cs1 <- corARMA(c(0.2, 0.3, -0.1), form = ~ 1 | Mare, p = 1, q = 2)
+# 
+# cs1ARMA <- corARMA(0.4, form = ~ 1 | Subject, q = 1)
+# cs1ARMA <- Initialize(cs1ARMA, data = Orthodont)
+# corMatrix(cs1ARMA)
+# 
+# cs2ARMA <- corARMA(c(0.8, 0.4), form = ~ 1 | Subject, p=1, q=1)
+# cs2ARMA <- Initialize(cs2ARMA, data = Orthodont)
+# corMatrix(cs2ARMA)
+# 
+# fm1Ovar.lme <- lme(follicles ~ sin(2*pi*Time) + cos(2*pi*Time),
+#                    data = Ovary, random = pdDiag(~sin(2*pi*Time)))
+# fm5Ovar.lme <- update(fm1Ovar.lme,
+#                       corr = corARMA(p = 1, q = 1))
+# 
+# Seatbelts.df <- data.frame(Seatbelts)
+# Seatbelts.df %>% as_tibble()
+# Seatbelts.df$t <- 1:(dim(Seatbelts.df)[1])
+# Seatbelts.df %>% as_tibble()
+# m <- gls(drivers ~ kms + PetrolPrice + law,
+#          data=Seatbelts.df,
+#          correlation=corARMA(p=1, q=0, form=~t))
+# summary(m)
+# 
+# 
+# 
+# # gee ---------------------------------------------------------------------
+# 
+# library(geepack)
+# 
+# #?geeglm
+# 
+# data(dietox)
+# dietox$Cu     <- as.factor(dietox$Cu)
+# mf <- formula(Weight~Cu*(Time+I(Time^2)+I(Time^3)))
+# gee1 <- geeglm(mf, data=dietox, id=Pig, family=poisson("identity"),corstr="ar1")
+# gee1
+# summary(gee1)
+# str(gee1)
+# 
+# mf2 <- formula(Weight~Cu*Time+I(Time^2)+I(Time^3))
+# gee2 <- geeglm(mf2, data=dietox, id=Pig, family=poisson("identity"),corstr="unstructured")
+# anova(gee2)
+# class(gee2)

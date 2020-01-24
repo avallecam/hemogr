@@ -1,4 +1,8 @@
 
+# pendientes
+
+- ( ) controlar por autocorrelacon
+
 # historial
 
 ## 20180103

@@ -506,7 +506,8 @@ full_t3 <- hto_1 %>%
   union_all(plaqueta_2)
 
 full_t3 %>% 
-  filter(p.value<=0.1)
+  filter(p.value<=0.1) %>% 
+  arrange(p.value)
 
 full_t3 %>% 
   mutate(estimate=round(estimate,2),

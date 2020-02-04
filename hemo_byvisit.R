@@ -31,19 +31,22 @@ hem %>% glimpse()
 hem %>% count(group)
 hem %>% count(new.code,group,sort = T) %>% count(group,n) #visitas para casos
 
-# CORE: tiempo entre visitas -----------------------------------------
+# CORE: tiempo al momento de visita -----------------------------------------
 #fuente: https://stackoverflow.com/questions/32312925/time-difference-in-years-with-lubridate
 #library(lubridate)
 
 hem %>% 
-  group_by(new.code) %>% 
-  #mutate(diff_fecha=fecha - lag(fecha)) %>% 
-  mutate(diff_fecha= new_interval(min(fecha), fecha)/days(1) ) %>% 
-  ungroup() %>% 
+  # group_by(new.code) %>% 
+  # #mutate(diff_fecha=fecha - lag(fecha)) %>% 
+  # mutate(diff_fecha= interval(min(fecha), fecha)/days(1) ) %>% 
+  # ungroup() %>% 
   filter(group=="pviv") %>% 
   select(new.code,num.visita,fecha,diff_fecha) %>% 
   group_by(num.visita) %>% 
   skimr::skim(diff_fecha)
+
+#' las visitas no estan equitativamente separadas en tiempo
+#' 0, 7, 28
 
 # trend plot -------------------------------------------------------------
 
@@ -196,8 +199,9 @@ compareGroups(num.visita ~ #sexo + edad +
 
 # trend regression --------------------------------------------------------
 
+hem %>% dim()
 hem_cc <- hem %>% filter(complete.cases(.))
-hem_cc %>% dim()
+hem_cc %>% dim() #perdida de 4 observaciones
 
 hem_cc_trd <- hem_cc %>% 
   filter(group!="control") #%>% filter(group!="pfal")
@@ -559,13 +563,26 @@ full_t3 %>%
 # 
 # library(geepack)
 # 
+# hem_cc_trd %>% count(new.code)
+# my <- plaqueta ~ num.visita*group + edad + sexo
+# 
+# glm(formula = my, data = hem_cc_trd, family = gaussian(link = "identity")) %>% 
+#   epi_tidymodel_coef()
+# 
+# geeglm(formula = my,
+#        data = hem_cc_trd,
+#        family = gaussian(link = "identity"), 
+#        id = new.code, 
+#        corstr = "exchangeable") %>% 
+#   epi_tidymodel_coef()
+# 
 # #?geeglm
 # 
 # data(dietox)
 # dietox$Cu     <- as.factor(dietox$Cu)
 # mf <- formula(Weight~Cu*(Time+I(Time^2)+I(Time^3)))
 # gee1 <- geeglm(mf, data=dietox, id=Pig, family=poisson("identity"),corstr="ar1")
-# gee1
+# gee1 %>% broom::tidy()
 # summary(gee1)
 # str(gee1)
 # 

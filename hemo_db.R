@@ -170,7 +170,7 @@ hem <- ctr %>%
          ) %>% 
   group_by(new.code) %>% 
   #mutate(diff_fecha=fecha - lag(fecha)) %>% 
-  mutate(diff_fecha= new_interval(min(fecha), fecha)/days(1) ,
+  mutate(diff_fecha= interval(min(fecha), fecha)/days(1) ,
          #diff_fecha=if_else(is.na(diff_fecha),0,diff_fecha)
          ) %>% 
   ungroup()

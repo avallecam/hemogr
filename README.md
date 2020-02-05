@@ -1,17 +1,17 @@
 
-# pendientes
+# haematological profile of malaria pacients
 
-- ( ) controlar por autocorrelacon
+## project structure
 
-# historial
+- `hemo_db.R` -> import and cleaning
+- `hemo_bygroup.R` -> cross-sectional analysis using baseline data
+- `hemo_byvisit.R` -> longitudinal analysis using folow-ups!
 
-## 20180103
+## historial
 
-Hola Andree
+### 20180103
 
-Te envío las bases de los hemogramas para el análisis de variaciones hematológicas en pacientes con malaria. 
-
-Son las siguientes bases:
+estrucutra de las bases:
 
 - Controles (n=308) del año 2010
 - Pf positivos (n=34) años 2011 y 2012
@@ -19,15 +19,20 @@ Son las siguientes bases:
 
 Rafael
 
-## 20181201
+### 20181201
 
 - Importar y limpiar base de datos
 
-## 20190506
+### 20190506
 
 - Union de base de datos y ejecución de análisis descriptivos
 
-# método
+### 20200204
+
+- recontacto con coautores
+- corrección por autocorrelación debido a mediciones repetidas
+
+## método
 
 - Definir variables
   * Var. independiente = infección, edad, sexo

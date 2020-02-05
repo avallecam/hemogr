@@ -7,34 +7,58 @@
 - `hemo_bygroup.R` -> cross-sectional analysis using baseline data
 - `hemo_byvisit.R` -> longitudinal analysis using folow-ups!
 
+
+## método: analisis longitudinal
+
+1. definir variable dependiente
+
+  * Var. dependiente = cada una de las mediciones hematológicas
+  * Y: gaussian distribution identity link function
+
+2. definir variables independientes
+  
+  * Var. independiente [confusores] = edad (continua), sexo (dicotómica)
+  * Var. independiente [time-invariant] = infeccion (especie de plasmodium, dicotomica)
+
+3. objetivo:
+  
+  * test if, in average, the change of Y in time is related with a time-invariant exposure
+  * this translates as including a interaction term between Y and the time-invariant exposure (Vittinghoff, 2nd edition, p271)
+
+4. correlation structure
+  * the repeated measurements were taken through time
+  * only three time measurements per pacient were included
+  * the measurement interval times are not equally spaced
+  * autoregressive process 1 (ar1) because the correlation between times differ
+
+5. clustered data
+  * each pacient had 3 visits each with one measurement for all the haematological variables
+  * dataset is in a long (tidy) format
+
+--------
+
 ## historial
 
-### 20180103
+__20180103__
 
-estrucutra de las bases:
+- recepción de las bases
 
-- Controles (n=308) del año 2010
-- Pf positivos (n=34) años 2011 y 2012
-- Pv positivos (n=93) año 2011
+- estructura:
 
-Rafael
+  - Controles (n=308) del año 2010
+  - Pf positivos (n=34) años 2011 y 2012
+  - Pv positivos (n=93) año 2011
 
-### 20181201
+__20181201__
 
-- Importar y limpiar base de datos
+- importar y limpiar base de datos
 
-### 20190506
+__20190506__
 
-- Union de base de datos y ejecución de análisis descriptivos
+- union de base de datos y ejecución de análisis descriptivos
 
-### 20200204
+__20200204__
 
-- recontacto con coautores
 - corrección por autocorrelación debido a mediciones repetidas
 
-## método
-
-- Definir variables
-  * Var. independiente = infección, edad, sexo
-  * Var. dependiente = mediciones hematológicas
   

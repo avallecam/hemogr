@@ -77,14 +77,35 @@ hem %>%
   gather(key,value,-new.code,-group, -diff_fecha, -num.visita) %>% 
   mutate(value=as.numeric(value),
          num.visita=as.factor(num.visita)) %>% 
+  mutate(key_2=case_when(
+    key == "hto." ~ "Hematocrit~('%')",
+    key == "leuco." ~ "White~blood~cells~(10^{3}/mm^{3})",
+    key == "abaston." ~ "Neutrophils~(band~cells)~('%')",
+    key == "segment." ~ "Neutrophils~('%')",
+    key == "eosinof." ~ "Eosinophils~('%')",
+    key == "linfocit." ~ "Limphocytes~('%')",
+    key == "plaqueta" ~ "Platelets~(10^{4}/mm^{3})",
+    key == "monocit." ~ "Monocites~('%')",
+    key == "basofil." ~ "Basophils~('%')", #
+    TRUE ~ key
+  )) %>% 
+  mutate(group=case_when(
+    group=="pfal"~"P. falciparum",
+    group=="pviv"~"P. vivax",
+    TRUE~group
+  )) %>% 
+  #mutate(value=if_else(value==0,0.1,value)) %>% 
   ggplot(aes(num.visita,value,colour=group)) +
   #geom_line() +
   geom_point(position = position_jitterdodge(),alpha=0.2) +
   geom_boxplot(alpha=0,lwd=0.4) +
-  facet_wrap(~key,scales = "free_y") +
+  facet_wrap(~key_2,scales = "free_y",labeller = label_parsed) +
   labs(title = "Trend of hematological profiles",
-       subtitle = "Visits at the day 7 and 28") +
-  xlab("Follow-up day") + ylab("Value")
+       subtitle = "Visits at baseline, day 7 and 28",
+       colour="Plasmodium\nspecie infection") +
+  #scale_y_log10() +
+  xlab("Visit number") + ylab("Value")+
+  theme(legend.text = element_text(face = "italic"))
 ggsave("figure/02-visit_boxplot.png",height = 6,width = 8)
 
 
@@ -592,22 +613,32 @@ full_t3 <- hto_1 %>%
   union_all(linfocit_1) %>% 
   union_all(linfocit_2) %>% 
   union_all(plaqueta_1) %>% 
-  union_all(plaqueta_2)
-
-full_t3 %>% 
-  filter(p.value<=0.1) %>% 
-  arrange(
-    outcome,
-    p.value
-    )
-
-#fix here due to grouppviv addition
-full_t3 %>% 
+  union_all(plaqueta_2) %>% 
+  #diferenciar grouppviv de modelo 1 y 2
   group_by(outcome) %>% 
   mutate(id = row_number()) %>% 
   ungroup() %>% #count(outcome,term,sort = T)
   mutate(term=if_else(term=="grouppviv",str_c(term,"_",id),term)) %>% 
-  select(-id) %>% 
+  select(-id)
+
+full_t3 %>% print_inf()
+
+full_t3 %>% 
+  filter(p.value<=0.05) %>% 
+  arrange(
+    term,
+    p.value
+    )
+
+full_t3 %>% 
+  filter(p.value>0.05 & p.value <=0.1) %>% 
+  arrange(
+    term,
+    p.value
+  )
+
+#fix here due to grouppviv addition
+full_t3 %>% 
   mutate(estimate=round(estimate,2),
          conf.low=round(conf.low,2),
          conf.high=round(conf.high,2)) %>% 

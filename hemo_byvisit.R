@@ -172,10 +172,12 @@ compareGroups(num.visita ~ #sexo + edad +
                           linfocit. = 2, #cercana a normal
                           plaqueta = 2,
                           basofil.= 2, edad = 2
-              )
-) %>% 
-  createTable(show.all = F, show.n = F,show.p.trend = T, digits = 1) #%>% 
-#export2xls("table/h0-tab2_pv_visitas.xls")
+                          )
+              ) %>% 
+  createTable(show.all = F, show.n = F,show.p.trend = T, digits = 1) -> tab2_time_pv
+
+tab2_time_pv
+tab2_time_pv %>% export2xls("table/h0-tab2_pv_visitas.xls")
 
 # tabla 2: por visita Pf -----------------------------------------------------
 
@@ -196,12 +198,12 @@ compareGroups(num.visita ~ #sexo + edad +
                           linfocit. = 2, #cercana a normal
                           plaqueta = 2,
                           basofil.= 2, edad = 2
-              )
-) %>% 
-  createTable(show.all = F, show.n = F, show.p.trend = T, digits = 1) #%>% 
-#export2xls("table/h0-tab2_pf_visitas.xls")
+                          )
+              ) %>% 
+  createTable(show.all = F, show.n = F, show.p.trend = T, digits = 1) -> tab2_time_pf
 
-
+tab2_time_pf
+tab2_time_pf %>% export2xls("table/h0-tab2_pf_visitas.xls")
 
 # trend regression --------------------------------------------------------
 

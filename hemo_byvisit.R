@@ -5,6 +5,10 @@
 #' generar tablas epi por grupo (ctr,viv,fal)
 #' estimar diferencia promedio entre controles y casos en la primera visita
 #' 
+#' referencia bibliografica principal
+#' vittingoff - capitulo 7 - repeated measurements
+#' modelo tabla 7.16
+#' 
 #' recomendacion
 #' set.seed(33)
 
@@ -17,6 +21,8 @@ library(lubridate)
 library(compareGroups)
 library(broom)
 library(rlang)
+library(geepack)
+library(avallecam)
 
 rm(list = ls())
 theme_set(theme_bw())
@@ -204,11 +210,52 @@ hem_cc <- hem %>% filter(complete.cases(.))
 hem_cc %>% dim() #perdida de 4 observaciones
 
 hem_cc_trd <- hem_cc %>% 
+  #this makes xtgee work!
+  mutate(new.code=as.factor(new.code),
+         num.visita=as.factor(num.visita)) %>% 
   filter(group!="control") #%>% filter(group!="pfal")
 #hem_cc_fal <- hem_cc %>% 
 #  filter(num.visita=="1") #%>% filter(group!="pviv")
 hem_cc_trd %>% count(group)
 #hem_cc_fal %>% count(group)
+
+hem_cc_trd %>% 
+  #transformar vectores chr a fct
+  mutate_if(is.character,as.factor) %>% 
+  rename_all(funs(str_replace_all(.,"\\.","_"))) %>% 
+  haven::write_dta("data/hem_cc_trd.dta")
+
+# _evaluate correlation structure ------------------------------------------
+
+custom_correlation_structure <- function(data) {
+  data %>% 
+    pivot_wider(names_from = num.visita,
+                values_from = val) %>% 
+    janitor::clean_names() %>% 
+    select(-new_code) %>% 
+    corrr::correlate() %>%
+    corrr::shave()
+}
+
+hem_cc_trd %>% 
+  pivot_longer(cols = hto.:plaqueta,names_to = "var",values_to = "val") %>% 
+  arrange(var,new.code,num.visita) %>% 
+  select(new.code,num.visita,var,val) %>% 
+  group_by(var) %>% 
+  nest() %>% 
+  mutate(corr=map(.x = data,.f = custom_correlation_structure)) %>% 
+  unnest(cols = c(corr)) %>% 
+  print_inf()
+
+#' hto and leuco share an almost equivalent correlation
+#' but the others are not similar
+#' however
+#' since repeated measurements were taken through time
+#' we can not use an exchangeble correlation matrix
+#' measurements were taken on different time intervals
+#' ar1 was used
+#' however, since times were irregular
+#' unstructured could also be applied
 
 
 # execute -----------------------------------------------------------------
@@ -221,274 +268,310 @@ hem_cc_trd %>% count(group)
 #--           o si el tiempo varía por la especie
 #-- diferente de: modelar estatus por mediciones de var. independi en tiempo
 
-epi_tidymodel_coef <- function(wm1) {
-  m1 <- wm1 %>% tidy() %>% #mutate(coef=estimate) %>% 
-    rownames_to_column()
-  m2 <- wm1 %>% confint_tidy() %>% #mutate_all(list(exp)) %>% 
-    rownames_to_column()
-  
-  left_join(m1,m2) %>% 
-    dplyr::select(term,#log.coef=estimate,
-                  estimate ,#coef,
-                  se=std.error,
-                  conf.low,conf.high,
-                  p.value) %>% 
-    mutate_at(.vars = vars(-term,-p.value),round, digits = 5) %>% 
-    mutate_at(.vars = vars(p.value),round, digits = 5) %>% 
-    #print() %>% 
-    return()
-}
+# epi_tidymodel_coef <- function(wm1) {
+#   m1 <- wm1 %>% tidy() %>% #mutate(coef=estimate) %>% 
+#     rownames_to_column()
+#   m2 <- wm1 %>% confint_tidy() %>% #mutate_all(list(exp)) %>% 
+#     rownames_to_column()
+#   
+#   left_join(m1,m2) %>% 
+#     dplyr::select(term,#log.coef=estimate,
+#                   estimate ,#coef,
+#                   se=std.error,
+#                   conf.low,conf.high,
+#                   p.value) %>% 
+#     mutate_at(.vars = vars(-term,-p.value),round, digits = 5) %>% 
+#     mutate_at(.vars = vars(p.value),round, digits = 5) %>% 
+#     #print() %>% 
+#     return()
+# }
 
 #plan: reportar modelos sin y con interacción (falta tabla sin!)
+
+# _all gee regressions at once --------------------------------------------
+
+#' plan
+#' - create dataset with covariate names
+#' - create the different equations
+#' - nest
+#' - apply the regression
+#' - unnest
 
 ## _hematocrito ----
 
 # #glm(hto. ~ edad + sexo, data = hem_cc_trd, family = gaussian(link = "identity")) %>% tidy()
 # 
-# glm.full <- glm(hto. ~ diff_fecha + edad + sexo + group
-#                 , data = hem_cc_trd, family = gaussian(link = "identity"))
-# glm.full %>% tidy()
-# glm.full %>% confint_tidy()
+# glm.full <-geeglm(hto. ~ diff_fecha + edad + sexo + group
+#                 , data = hem_cc_trd, family = gaussian(link = "identity"),
+#                 id = new.code, waves = num.visita, corstr = "ar1")
+## glm.full %>% tidy()
+## glm.full %>% confint_tidy()
 # 
 # hto_01 <- epi_tidymodel_coef(glm.full) %>% 
-#   filter(str_detect(term,"diff")) %>% 
+#   filter(str_detect(term,"diff")|str_detect(term,"group")) %>% 
 #   select(term,estimate,starts_with("conf."),p.value) %>% 
 #   mutate(outcome="hto") %>% 
 #   print()
 # 
-# glm.full <- glm(hto. ~ num.visita + edad + sexo + group
-#                 , data = hem_cc_trd, family = gaussian(link = "identity"))
-# glm.full %>% tidy()
-# glm.full %>% confint_tidy()
+# glm.full <-geeglm(hto. ~ num.visita + edad + sexo + group
+#                 , data = hem_cc_trd, family = gaussian(link = "identity"),
+#                 id = new.code, waves = num.visita, corstr = "ar1")
+## glm.full %>% tidy()
+## glm.full %>% confint_tidy()
 # 
 # hto_02 <- epi_tidymodel_coef(glm.full) %>% 
-#   filter(str_detect(term,"num.v")) %>% 
+#   filter(str_detect(term,"num.v")|str_detect(term,"group")) %>% 
 #   select(term,estimate,starts_with("conf."),p.value) %>% 
 #   mutate(outcome="hto") %>% 
 #   print()
 
-glm.full <- glm(hto. ~ diff_fecha*group + edad + sexo
-                , data = hem_cc_trd, family = gaussian(link = "identity"))
-glm.full %>% tidy()
-glm.full %>% confint_tidy()
+glm.full <-geeglm(hto. ~ diff_fecha*group + edad + sexo
+                  , data = hem_cc_trd, family = gaussian(link = "identity"),
+                  id = new.code, waves = num.visita, corstr = "ar1")
+#glm.full %>% tidy()
+#glm.full %>% confint_tidy()
 
 hto_1 <- epi_tidymodel_coef(glm.full) %>% 
-  filter(str_detect(term,"diff")) %>% 
+  filter(str_detect(term,"diff")|str_detect(term,"group")) %>% 
   select(term,estimate,starts_with("conf."),p.value) %>% 
   mutate(outcome="hto") %>% 
   print()
 
-glm.full <- glm(hto. ~ num.visita*group + edad + sexo
-                , data = hem_cc_trd, family = gaussian(link = "identity"))
-glm.full %>% tidy()
-glm.full %>% confint_tidy()
+glm.full <-geeglm(hto. ~ num.visita*group + edad + sexo
+                  , data = hem_cc_trd, family = gaussian(link = "identity"),
+                  id = new.code, waves = num.visita, corstr = "ar1")
+#glm.full %>% tidy()
+#glm.full %>% confint_tidy()
 
 hto_2 <- epi_tidymodel_coef(glm.full) %>% 
-  filter(str_detect(term,"num.v")) %>% 
+  filter(str_detect(term,"num.v")|str_detect(term,"group")) %>% 
   select(term,estimate,starts_with("conf."),p.value) %>% 
   mutate(outcome="hto") %>% 
   print()
 
 ## _leucocitos ----
-# glm.full <- glm(leuco. ~ diff_fecha + edad + sexo
-#                 , data = hem_cc_trd, family = gaussian(link = "identity"))
-# glm.full %>% tidy()
-# glm.full %>% confint_tidy()
+# glm.full <-geeglm(leuco. ~ diff_fecha + edad + sexo
+#                 , data = hem_cc_trd, family = gaussian(link = "identity"),
+#                 id = new.code, waves = num.visita, corstr = "ar1")
+## glm.full %>% tidy()
+## glm.full %>% confint_tidy()
 # 
-# glm.full <- glm(leuco. ~ diff_fecha + group + edad + sexo
-#                 , data = hem_cc_trd, family = gaussian(link = "identity"))
-# glm.full %>% tidy()
-# glm.full %>% confint_tidy()
+# glm.full <-geeglm(leuco. ~ diff_fecha + group + edad + sexo
+#                 , data = hem_cc_trd, family = gaussian(link = "identity"),
+#                 id = new.code, waves = num.visita, corstr = "ar1")
+## glm.full %>% tidy()
+## glm.full %>% confint_tidy()
 
 
-glm.full <- glm(leuco. ~ diff_fecha*group + edad + sexo
-                , data = hem_cc_trd, family = gaussian(link = "identity"))
-glm.full %>% tidy()
-glm.full %>% confint_tidy()
+glm.full <-geeglm(leuco. ~ diff_fecha*group + edad + sexo
+                  , data = hem_cc_trd, family = gaussian(link = "identity"),
+                  id = new.code, waves = num.visita, corstr = "ar1")
+#glm.full %>% tidy()
+#glm.full %>% confint_tidy()
 
 leuco_1 <- epi_tidymodel_coef(glm.full) %>% 
-  filter(str_detect(term,"diff")) %>% 
+  filter(str_detect(term,"diff")|str_detect(term,"group")) %>% 
   select(term,estimate,starts_with("conf."),p.value) %>% 
   mutate(outcome="leuco") %>% 
   print()
 
 
-glm.full <- glm(leuco. ~ num.visita*group + edad + sexo
-                , data = hem_cc_trd, family = gaussian(link = "identity"))
-glm.full %>% tidy()
-glm.full %>% confint_tidy()
+glm.full <-geeglm(leuco. ~ num.visita*group + edad + sexo
+                  , data = hem_cc_trd, family = gaussian(link = "identity"),
+                  id = new.code, waves = num.visita, corstr = "ar1")
+#glm.full %>% tidy()
+#glm.full %>% confint_tidy()
 
 leuco_2 <- epi_tidymodel_coef(glm.full) %>% 
-  filter(str_detect(term,"num.v")) %>% 
+  filter(str_detect(term,"num.v")|str_detect(term,"group")) %>% 
   select(term,estimate,starts_with("conf."),p.value) %>% 
   mutate(outcome="leuco") %>% 
   print()
 
 ## _abastonados ----
-# glm.full <- glm(abaston. ~ diff_fecha + edad + sexo
-#                 , data = hem_cc_trd, family = gaussian(link = "identity"))
-# glm.full %>% tidy()
-# glm.full %>% confint_tidy()
+# glm.full <-geeglm(abaston. ~ diff_fecha + edad + sexo
+#                 , data = hem_cc_trd, family = gaussian(link = "identity"),
+#                 id = new.code, waves = num.visita, corstr = "ar1")
+## glm.full %>% tidy()
+## glm.full %>% confint_tidy()
 # 
-# glm.full <- glm(abaston. ~ diff_fecha + group + edad + sexo
-#                 , data = hem_cc_trd, family = gaussian(link = "identity"))
-# glm.full %>% tidy()
-# glm.full %>% confint_tidy()
+# glm.full <-geeglm(abaston. ~ diff_fecha + group + edad + sexo
+#                 , data = hem_cc_trd, family = gaussian(link = "identity"),
+#                 id = new.code, waves = num.visita, corstr = "ar1")
+## glm.full %>% tidy()
+## glm.full %>% confint_tidy()
 
-glm.full <- glm(abaston. ~ diff_fecha*group + edad + sexo
-                , data = hem_cc_trd, family = gaussian(link = "identity"))
-glm.full %>% tidy()
-glm.full %>% confint_tidy()
+glm.full <-geeglm(abaston. ~ diff_fecha*group + edad + sexo
+                  , data = hem_cc_trd, family = gaussian(link = "identity"),
+                  id = new.code, waves = num.visita, corstr = "ar1")
+#glm.full %>% tidy()
+#glm.full %>% confint_tidy()
 
 abaston_1 <- epi_tidymodel_coef(glm.full) %>% 
-  filter(str_detect(term,"diff")) %>% 
+  filter(str_detect(term,"diff")|str_detect(term,"group")) %>% 
   select(term,estimate,starts_with("conf."),p.value) %>% 
   mutate(outcome="abaston") %>% 
   print()
 
-glm.full <- glm(abaston. ~ num.visita*group + edad + sexo
-                , data = hem_cc_trd, family = gaussian(link = "identity"))
-glm.full %>% tidy()
-glm.full %>% confint_tidy()
+glm.full <-geeglm(abaston. ~ num.visita*group + edad + sexo
+                  , data = hem_cc_trd, family = gaussian(link = "identity"),
+                  id = new.code, waves = num.visita, corstr = "ar1")
+#glm.full %>% tidy()
+#glm.full %>% confint_tidy()
 
 abaston_2 <- epi_tidymodel_coef(glm.full) %>% 
-  filter(str_detect(term,"num.v")) %>% 
+  filter(str_detect(term,"num.v")|str_detect(term,"group")) %>% 
   select(term,estimate,starts_with("conf."),p.value) %>% 
   mutate(outcome="abaston") %>% 
   print()
 
 ## _segmentados ----
-# glm.full <- glm(segment. ~ diff_fecha + edad + sexo
-#                 , data = hem_cc_trd, family = gaussian(link = "identity"))
-# glm.full %>% tidy()
-# glm.full %>% confint_tidy()
+# glm.full <-geeglm(segment. ~ diff_fecha + edad + sexo
+#                 , data = hem_cc_trd, family = gaussian(link = "identity"),
+#                 id = new.code, waves = num.visita, corstr = "ar1")
+## glm.full %>% tidy()
+## glm.full %>% confint_tidy()
 # 
-# glm.full <- glm(segment. ~ diff_fecha + group + edad + sexo
-#                 , data = hem_cc_trd, family = gaussian(link = "identity"))
-# glm.full %>% tidy()
-# glm.full %>% confint_tidy()
+# glm.full <-geeglm(segment. ~ diff_fecha + group + edad + sexo
+#                 , data = hem_cc_trd, family = gaussian(link = "identity"),
+#                 id = new.code, waves = num.visita, corstr = "ar1")
+## glm.full %>% tidy()
+## glm.full %>% confint_tidy()
 
-glm.full <- glm(segment. ~ diff_fecha*group + edad + sexo
-                , data = hem_cc_trd, family = gaussian(link = "identity"))
-glm.full %>% tidy()
-glm.full %>% confint_tidy()
+glm.full <-geeglm(segment. ~ diff_fecha*group + edad + sexo
+                  , data = hem_cc_trd, family = gaussian(link = "identity"),
+                  id = new.code, waves = num.visita, corstr = "ar1")
+#glm.full %>% tidy()
+#glm.full %>% confint_tidy()
 
 segment_1 <- epi_tidymodel_coef(glm.full) %>% 
-  filter(str_detect(term,"diff")) %>% 
+  filter(str_detect(term,"diff")|str_detect(term,"group")) %>% 
   select(term,estimate,starts_with("conf."),p.value) %>% 
   mutate(outcome="segment") %>% 
   print()
 
-glm.full <- glm(segment. ~ num.visita*group + edad + sexo
-                , data = hem_cc_trd, family = gaussian(link = "identity"))
-glm.full %>% tidy()
-glm.full %>% confint_tidy()
+glm.full <-geeglm(segment. ~ num.visita*group + edad + sexo
+                  , data = hem_cc_trd, family = gaussian(link = "identity"),
+                  id = new.code, waves = num.visita, corstr = "ar1")
+#glm.full %>% tidy()
+#glm.full %>% confint_tidy()
 
 segment_2 <- epi_tidymodel_coef(glm.full) %>% 
-  filter(str_detect(term,"num.v")) %>% 
+  filter(str_detect(term,"num.v")|str_detect(term,"group")) %>% 
   select(term,estimate,starts_with("conf."),p.value) %>% 
   mutate(outcome="segment") %>% 
   print()
 
 ## _eosinofilos ----
-# glm.full <- glm(eosinof. ~ diff_fecha + edad + sexo
-#                 , data = hem_cc_trd, family = gaussian(link = "identity"))
-# glm.full %>% tidy()
-# glm.full %>% confint_tidy()
+# glm.full <-geeglm(eosinof. ~ diff_fecha + edad + sexo
+#                 , data = hem_cc_trd, family = gaussian(link = "identity"),
+#                 id = new.code, waves = num.visita, corstr = "ar1")
+## glm.full %>% tidy()
+## glm.full %>% confint_tidy()
 # 
-# glm.full <- glm(eosinof. ~ diff_fecha + group + edad + sexo
-#                 , data = hem_cc_trd, family = gaussian(link = "identity"))
-# glm.full %>% tidy()
-# glm.full %>% confint_tidy()
+# glm.full <-geeglm(eosinof. ~ diff_fecha + group + edad + sexo
+#                 , data = hem_cc_trd, family = gaussian(link = "identity"),
+#                 id = new.code, waves = num.visita, corstr = "ar1")
+## glm.full %>% tidy()
+## glm.full %>% confint_tidy()
 
-glm.full <- glm(eosinof. ~ diff_fecha*group + edad + sexo
-                , data = hem_cc_trd, family = gaussian(link = "identity"))
-glm.full %>% tidy()
-glm.full %>% confint_tidy()
+glm.full <-geeglm(eosinof. ~ diff_fecha*group + edad + sexo
+                  , data = hem_cc_trd, family = gaussian(link = "identity"),
+                  id = new.code, waves = num.visita, corstr = "ar1")
+#glm.full %>% tidy()
+#glm.full %>% confint_tidy()
 
 eosinof_1 <- epi_tidymodel_coef(glm.full) %>% 
-  filter(str_detect(term,"diff")) %>% 
+  filter(str_detect(term,"diff")|str_detect(term,"group")) %>% 
   select(term,estimate,starts_with("conf."),p.value) %>% 
   mutate(outcome="eosinof") %>% 
   print()
 
-glm.full <- glm(eosinof. ~ num.visita*group + edad + sexo
-                , data = hem_cc_trd, family = gaussian(link = "identity"))
-glm.full %>% tidy()
-glm.full %>% confint_tidy()
+glm.full <-geeglm(eosinof. ~ num.visita*group + edad + sexo
+                  , data = hem_cc_trd, family = gaussian(link = "identity"),
+                  id = new.code, waves = num.visita, corstr = "ar1")
+#glm.full %>% tidy()
+#glm.full %>% confint_tidy()
 
 eosinof_2 <- epi_tidymodel_coef(glm.full) %>% 
-  filter(str_detect(term,"num.v")) %>% 
+  filter(str_detect(term,"num.v")|str_detect(term,"group")) %>% 
   select(term,estimate,starts_with("conf."),p.value) %>% 
   mutate(outcome="eosinof") %>% 
   print()
 
 ## _linfocitos ----
-# glm.full <- glm(linfocit. ~ diff_fecha + edad + sexo
-#                 , data = hem_cc_trd, family = gaussian(link = "identity"))
-# glm.full %>% tidy()
-# glm.full %>% confint_tidy()
+# glm.full <-geeglm(linfocit. ~ diff_fecha + edad + sexo
+#                 , data = hem_cc_trd, family = gaussian(link = "identity"),
+#                 id = new.code, waves = num.visita, corstr = "ar1")
+## glm.full %>% tidy()
+## glm.full %>% confint_tidy()
 # 
-# glm.full <- glm(linfocit. ~ diff_fecha + group + edad + sexo
-#                 , data = hem_cc_trd, family = gaussian(link = "identity"))
-# glm.full %>% tidy()
-# glm.full %>% confint_tidy()
+# glm.full <-geeglm(linfocit. ~ diff_fecha + group + edad + sexo
+#                 , data = hem_cc_trd, family = gaussian(link = "identity"),
+#                 id = new.code, waves = num.visita, corstr = "ar1")
+## glm.full %>% tidy()
+## glm.full %>% confint_tidy()
 
-glm.full <- glm(linfocit. ~ diff_fecha*group + edad + sexo
-                , data = hem_cc_trd, family = gaussian(link = "identity"))
-glm.full %>% tidy()
-glm.full %>% confint_tidy()
+glm.full <-geeglm(linfocit. ~ diff_fecha*group + edad + sexo
+                  , data = hem_cc_trd, family = gaussian(link = "identity"),
+                  id = new.code, waves = num.visita, corstr = "ar1")
+#glm.full %>% tidy()
+#glm.full %>% confint_tidy()
 
 linfocit_1 <- epi_tidymodel_coef(glm.full) %>% 
-  filter(str_detect(term,"diff")) %>% 
+  filter(str_detect(term,"diff")|str_detect(term,"group")) %>% 
   select(term,estimate,starts_with("conf."),p.value) %>% 
   mutate(outcome="linfocit") %>% 
   print()
 
-glm.full <- glm(linfocit. ~ num.visita*group + edad + sexo
-                , data = hem_cc_trd, family = gaussian(link = "identity"))
-glm.full %>% tidy()
-glm.full %>% confint_tidy()
+glm.full <-geeglm(linfocit. ~ num.visita*group + edad + sexo
+                  , data = hem_cc_trd, family = gaussian(link = "identity"),
+                  id = new.code, waves = num.visita, corstr = "ar1")
+#glm.full %>% tidy()
+#glm.full %>% confint_tidy()
 
 linfocit_2 <- epi_tidymodel_coef(glm.full) %>% 
-  filter(str_detect(term,"num.v")) %>% 
+  filter(str_detect(term,"num.v")|str_detect(term,"group")) %>% 
   select(term,estimate,starts_with("conf."),p.value) %>% 
   mutate(outcome="linfocit") %>% 
   print()
 
 ## _plaqueta ----
-# glm.full <- glm(plaqueta ~ diff_fecha + edad + sexo
-#                 , data = hem_cc_trd, family = gaussian(link = "identity"))
-# glm.full %>% tidy()
-# glm.full %>% confint_tidy()
+# glm.full <-geeglm(plaqueta ~ diff_fecha + edad + sexo
+#                 , data = hem_cc_trd, family = gaussian(link = "identity"),
+#                 id = new.code, waves = num.visita, corstr = "ar1")
+## glm.full %>% tidy()
+## glm.full %>% confint_tidy()
 # 
-# glm.full <- glm(plaqueta ~ diff_fecha + group + edad + sexo
-#                 , data = hem_cc_trd, family = gaussian(link = "identity"))
-# glm.full %>% tidy()
-# glm.full %>% confint_tidy()
+# glm.full <-geeglm(plaqueta ~ diff_fecha + group + edad + sexo
+#                 , data = hem_cc_trd, family = gaussian(link = "identity"),
+#                 id = new.code, waves = num.visita, corstr = "ar1")
+## glm.full %>% tidy()
+## glm.full %>% confint_tidy()
 
-glm.full <- glm(plaqueta ~ diff_fecha*group + edad + sexo
-                , data = hem_cc_trd, family = gaussian(link = "identity"))
-glm.full %>% tidy()
-glm.full %>% confint_tidy()
+glm.full <-geeglm(plaqueta ~ diff_fecha*group + edad + sexo
+                  , data = hem_cc_trd, family = gaussian(link = "identity"),
+                  id = new.code, waves = num.visita, corstr = "ar1")
+#glm.full %>% tidy()
+#glm.full %>% confint_tidy()
 
 plaqueta_1 <- epi_tidymodel_coef(glm.full) %>% 
-  filter(str_detect(term,"diff")) %>% 
+  filter(str_detect(term,"diff")|str_detect(term,"group")) %>% 
   select(term,estimate,starts_with("conf."),p.value) %>% 
   mutate(outcome="plaqueta") %>% 
   print()
 
-glm.full <- glm(plaqueta ~ num.visita*group + edad + sexo
-                , data = hem_cc_trd, family = gaussian(link = "identity"))
-glm.full %>% tidy()
-glm.full %>% confint_tidy()
+glm.full <-geeglm(plaqueta ~ num.visita*group + edad + sexo
+                  , data = hem_cc_trd, family = gaussian(link = "identity"),
+                  id = new.code, waves = num.visita, corstr = "ar1")
+#glm.full %>% tidy()
+#glm.full %>% confint_tidy()
 
 plaqueta_2 <- epi_tidymodel_coef(glm.full) %>% 
-  filter(str_detect(term,"num.v")) %>% 
+  filter(str_detect(term,"num.v")|str_detect(term,"group")) %>% 
   select(term,estimate,starts_with("conf."),p.value) %>% 
   mutate(outcome="plaqueta") %>% 
   print()
-
 
 # 00_ EXPORTAR ------------------------------------------------------------
 
@@ -511,9 +594,18 @@ full_t3 <- hto_1 %>%
 
 full_t3 %>% 
   filter(p.value<=0.1) %>% 
-  arrange(p.value)
+  arrange(
+    outcome,
+    p.value
+    )
 
+#fix here due to grouppviv addition
 full_t3 %>% 
+  group_by(outcome) %>% 
+  mutate(id = row_number()) %>% 
+  ungroup() %>% #count(outcome,term,sort = T)
+  mutate(term=if_else(term=="grouppviv",str_c(term,"_",id),term)) %>% 
+  select(-id) %>% 
   mutate(estimate=round(estimate,2),
          conf.low=round(conf.low,2),
          conf.high=round(conf.high,2)) %>% 
@@ -526,7 +618,8 @@ full_t3 %>%
                              "hto","leuco",
                              "abaston","segment",
                              "eosinof","linfocit")) %>% 
-  spread(new_col,value) %>% 
+  pivot_wider(names_from = new_col,values_from = value) %>% 
+  #spread(new_col,value) %>% 
   xlsx::write.xlsx("table/h0-tab3_visitas.xls")
 
 # # correlation term --------------------------------------------------------
@@ -562,18 +655,22 @@ full_t3 %>%
 # # gee ---------------------------------------------------------------------
 # 
 # library(geepack)
+# # robust standard error are default
 # 
+# hem_cc_trd %>% glimpse()
 # hem_cc_trd %>% count(new.code)
 # my <- plaqueta ~ num.visita*group + edad + sexo
 # 
-# glm(formula = my, data = hem_cc_trd, family = gaussian(link = "identity")) %>% 
+# glm(formula = my, data = hem_cc_trd, family = gaussian(link = "identity")) %>%
 #   epi_tidymodel_coef()
 # 
 # geeglm(formula = my,
 #        data = hem_cc_trd,
-#        family = gaussian(link = "identity"), 
-#        id = new.code, 
-#        corstr = "exchangeable") %>% 
+#        family = gaussian(link = "identity"),
+#        id = new.code,
+#        waves = num.visita,
+#        corstr = "ar1" #corstr = "independence"
+#        ) %>%
 #   epi_tidymodel_coef()
 # 
 # #?geeglm
@@ -583,6 +680,7 @@ full_t3 %>%
 # mf <- formula(Weight~Cu*(Time+I(Time^2)+I(Time^3)))
 # gee1 <- geeglm(mf, data=dietox, id=Pig, family=poisson("identity"),corstr="ar1")
 # gee1 %>% broom::tidy()
+# vcov(gee1)
 # summary(gee1)
 # str(gee1)
 # 

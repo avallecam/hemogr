@@ -17,13 +17,13 @@
 
 2. definir variables independientes
   
-  * Var. independiente [confusores] = edad (continua), sexo (dicotómica)
   * Var. independiente [time-invariant] = infeccion (especie de plasmodium, dicotomica)
+  * Var. independiente [confusores] = edad (continua), sexo (dicotómica)
 
 3. objetivo:
   
   * test if, in average, the change of Y in time is related with a time-invariant exposure
-  * this translates as including a interaction term between Y and the time-invariant exposure (Vittinghoff, 2nd edition, p271)
+  * this translates as including an interaction term between Y and the time-invariant exposure (Vittinghoff, 2nd edition, p271)
 
 4. correlation structure
   * the repeated measurements were taken through time

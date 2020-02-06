@@ -54,6 +54,14 @@ hem %>%
 #' las visitas no estan equitativamente separadas en tiempo
 #' 0, 7, 28
 
+# outcome distribution ----------------------------------------------------
+
+hem %>% 
+  select(hto.:plaqueta) %>% 
+  skimr::skim()
+#' abaston, basofil, monocit
+#' may require negative binomial dsitribution
+
 # trend plot -------------------------------------------------------------
 
 # __ persona-fecha_visita ------------------------------------------------
@@ -235,10 +243,14 @@ hem_cc %>% dim() #perdida de 4 observaciones
 hem_cc_trd <- hem_cc %>% 
   #this makes xtgee work!
   mutate(new.code=as.factor(new.code),
+         #num.visita=as.integer(num.visita),
          num.visita=as.factor(num.visita)) %>% 
+  #to use negative binomial distribution due to overdisperssion
+  #mutate(abaston.=as.integer(abaston.)) %>% 
   filter(group!="control") #%>% filter(group!="pfal")
 #hem_cc_fal <- hem_cc %>% 
 #  filter(num.visita=="1") #%>% filter(group!="pviv")
+hem_cc_trd %>% glimpse()
 hem_cc_trd %>% count(group)
 #hem_cc_fal %>% count(group)
 
@@ -427,6 +439,9 @@ leuco_2 <- epi_tidymodel_coef(glm.full) %>%
 glm.full <-geeglm(abaston. ~ diff_fecha*group + edad + sexo
                   , data = hem_cc_trd, family = gaussian(link = "identity"),
                   id = new.code, waves = num.visita, corstr = "ar1")
+# glm.full <-geeM::geem(abaston. ~ diff_fecha*group + edad + sexo
+#                   , data = hem_cc_trd, family = MASS::negative.binomial(2),
+#                   id = new.code, waves = num.visita, corstr = "ar1")
 #glm.full %>% tidy()
 #glm.full %>% confint_tidy()
 

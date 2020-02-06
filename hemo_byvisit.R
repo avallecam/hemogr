@@ -22,6 +22,7 @@ library(compareGroups)
 library(broom)
 library(rlang)
 library(geepack)
+library(geeM)
 library(avallecam)
 
 rm(list = ls())
@@ -59,8 +60,10 @@ hem %>%
 hem %>% 
   select(hto.:plaqueta) %>% 
   skimr::skim()
+
 #' abaston, basofil, monocit
 #' may require negative binomial dsitribution
+hem %>% count(abaston.)
 
 # trend plot -------------------------------------------------------------
 
@@ -436,20 +439,28 @@ leuco_2 <- epi_tidymodel_coef(glm.full) %>%
 ## glm.full %>% tidy()
 ## glm.full %>% confint_tidy()
 
-glm.full <-geeglm(abaston. ~ diff_fecha*group + edad + sexo
-                  , data = hem_cc_trd, family = gaussian(link = "identity"),
-                  id = new.code, waves = num.visita, corstr = "ar1")
-# glm.full <-geeM::geem(abaston. ~ diff_fecha*group + edad + sexo
-#                   , data = hem_cc_trd, family = MASS::negative.binomial(2),
+# glm.full <-geeglm(abaston. ~ diff_fecha*group + edad + sexo
+#                   , data = hem_cc_trd, family = gaussian(link = "identity"),
 #                   id = new.code, waves = num.visita, corstr = "ar1")
-#glm.full %>% tidy()
-#glm.full %>% confint_tidy()
+# #glm.full %>% tidy()
+# #glm.full %>% confint_tidy()
+# 
+# abaston_1 <- epi_tidymodel_coef(glm.full) %>% 
+#   filter(str_detect(term,"diff")|str_detect(term,"group")) %>% 
+#   select(term,estimate,starts_with("conf."),p.value) %>% 
+#   mutate(outcome="abaston") %>% 
+#   print()
 
-abaston_1 <- epi_tidymodel_coef(glm.full) %>% 
-  filter(str_detect(term,"diff")|str_detect(term,"group")) %>% 
-  select(term,estimate,starts_with("conf."),p.value) %>% 
-  mutate(outcome="abaston") %>% 
-  print()
+glm.full <- geem(abaston. ~ diff_fecha*group + edad + sexo,
+                 data = hem_cc_trd %>% as.data.frame(), 
+                 family = MASS::negative.binomial(2),
+                       id = new.code, 
+                       #waves = num.visita, 
+                       corstr = "ar1")
+glm.full %>% summary()
+glm.full %>% coef()
+#glm.full %>% confint()
+#glm.full %>% vcov() %>% diag() #issue
 
 glm.full <-geeglm(abaston. ~ num.visita*group + edad + sexo
                   , data = hem_cc_trd, family = gaussian(link = "identity"),
@@ -457,11 +468,11 @@ glm.full <-geeglm(abaston. ~ num.visita*group + edad + sexo
 #glm.full %>% tidy()
 #glm.full %>% confint_tidy()
 
-abaston_2 <- epi_tidymodel_coef(glm.full) %>% 
-  filter(str_detect(term,"num.v")|str_detect(term,"group")) %>% 
-  select(term,estimate,starts_with("conf."),p.value) %>% 
-  mutate(outcome="abaston") %>% 
-  print()
+# abaston_2 <- epi_tidymodel_coef(glm.full) %>% 
+#   filter(str_detect(term,"num.v")|str_detect(term,"group")) %>% 
+#   select(term,estimate,starts_with("conf."),p.value) %>% 
+#   mutate(outcome="abaston") %>% 
+#   print()
 
 ## _segmentados ----
 # glm.full <-geeglm(segment. ~ diff_fecha + edad + sexo
@@ -619,8 +630,8 @@ full_t3 <- hto_1 %>%
   union_all(hto_2) %>% 
   union_all(leuco_1) %>% 
   union_all(leuco_2) %>% 
-  union_all(abaston_1) %>% 
-  union_all(abaston_2) %>% 
+  # union_all(abaston_1) %>% #obtained in stata / geeM error with confint
+  # union_all(abaston_2) %>% 
   union_all(segment_1) %>% 
   union_all(segment_2) %>% 
   union_all(eosinof_1) %>% 

@@ -1,6 +1,12 @@
 
 # haematological profile of malaria pacients
 
+
+
+[![DOI](https://zenodo.org/badge/238349977.svg)](https://zenodo.org/badge/latestdoi/238349977)
+
+
+
 ## project structure
 
 - `hemo_db.R` -> import and cleaning

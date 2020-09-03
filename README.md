@@ -1,5 +1,5 @@
 
-# haematological profile of malaria pacients
+# haematological profile of malaria patients
 
 
 

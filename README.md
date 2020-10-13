@@ -1,5 +1,11 @@
 
-# haematological profile of malaria pacients
+# haematological profile of malaria patients
+
+
+
+[![DOI](https://zenodo.org/badge/238349977.svg)](https://zenodo.org/badge/latestdoi/238349977)
+
+
 
 ## project structure
 
@@ -61,4 +67,20 @@ __20200204__
 
 - corrección por autocorrelación debido a mediciones repetidas
 
-  
+
+----------
+
+## citar
+
+```
+@software{andree_valle_campos_2020_4014205,
+  author       = {Andree Valle Campos},
+  title        = {avallecam/hemogr: First release},
+  month        = sep,
+  year         = 2020,
+  publisher    = {Zenodo},
+  version      = {v0.1},
+  doi          = {10.5281/zenodo.4014205},
+  url          = {https://doi.org/10.5281/zenodo.4014205}
+}
+```

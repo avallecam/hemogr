@@ -81,6 +81,69 @@ hem %>%
   #geom_boxplot(aes(group=diff_fecha),alpha=0) +
   facet_wrap(~key,scales = "free_y")
 
+# differences -------------------------------------------------------------
+
+hem %>% 
+  filter(group!="control") %>% 
+  select(-edad, -sexo, -fecha,-diff_fecha) %>% 
+  pivot_longer(cols = -c(new.code,group,num.visita),
+               names_to="outcome",
+               values_to="value") %>% 
+  pivot_wider(names_from = num.visita,
+              values_from = value) %>% 
+  janitor::clean_names() %>% 
+  rowwise() %>% 
+  mutate(diff_2_1=sum(c(x2,-x1),na.rm = T)) %>% 
+  mutate(diff_3_2=sum(c(x3,-x2),na.rm = T)) %>% 
+  mutate(diff_3_1=sum(c(x3,-x1),na.rm = T)) %>% 
+  ungroup() %>% 
+  select(-x1,-x2,-x3) %>% 
+  pivot_longer(cols = -c(new_code,group,outcome),
+               names_to="interval",
+               values_to="value") %>% 
+  
+  rename(key=outcome) %>% 
+  mutate(key_2=case_when(
+    key == "hto." ~ "Hematocrit~('%')",
+    key == "leuco." ~ "White~blood~cells~(10^{3}/mm^{3})",
+    key == "abaston." ~ "Neutrophils~(band~cells)~('%')",
+    key == "segment." ~ "Neutrophils~('%')",
+    key == "eosinof." ~ "Eosinophils~('%')",
+    key == "linfocit." ~ "Limphocytes~('%')",
+    key == "plaqueta" ~ "Platelets~(10^{4}/mm^{3})",
+    key == "monocit." ~ "Monocites~('%')",
+    key == "basofil." ~ "Basophils~('%')", #
+    TRUE ~ key
+  )) %>% 
+  rename(outcome=key_2) %>%
+  mutate(group=case_when(
+    group=="pfal"~"P. falciparum",
+    group=="pviv"~"P. vivax",
+    TRUE~group
+  )) %>% 
+  
+  mutate(interval=fct_relevel(interval,
+                              "diff_2_1",
+                              "diff_3_2")) %>% 
+  mutate(interval=fct_recode(interval,
+                             "2 vs 1"="diff_2_1",
+                             "3 vs 2"="diff_3_2",
+                             "3 vs 1"="diff_3_1")) %>% 
+  
+  ggplot(aes(x = interval,y = value,color=group)) +
+  geom_violin(alpha=0,lwd=0.4) +
+  geom_point(position = position_jitterdodge(),alpha=0.2) +
+  facet_wrap(~outcome,scales = "free",
+             labeller = label_parsed) +
+  geom_hline(aes(yintercept=0)) +
+  labs(title = "Subject Differences in the Trend of hematological profiles",
+       subtitle = "Between Visits at baseline, day 7 and 28",
+       colour="Plasmodium\nspecie infection",
+       y="Difference",
+       x="Visit Intervals")+
+  theme(legend.text = element_text(face = "italic"))
+ggsave("figure/03-visit_violin-difference.png",height = 6,width = 8)
+
 # __ grupo-numero_visita ------------------------------------------------
 hem %>% 
   filter(group!="control") %>% 
@@ -109,7 +172,7 @@ hem %>%
   ggplot(aes(num.visita,value,colour=group)) +
   #geom_line() +
   geom_point(position = position_jitterdodge(),alpha=0.2) +
-  geom_boxplot(alpha=0,lwd=0.4) +
+  geom_violin(alpha=0,lwd=0.4) +
   facet_wrap(~key_2,scales = "free_y",labeller = label_parsed) +
   labs(title = "Trend of hematological profiles",
        subtitle = "Visits at baseline, day 7 and 28",
@@ -117,7 +180,7 @@ hem %>%
   #scale_y_log10() +
   xlab("Visit number") + ylab("Value")+
   theme(legend.text = element_text(face = "italic"))
-ggsave("figure/02-visit_boxplot.png",height = 6,width = 8)
+ggsave("figure/02-visit_violin.png",height = 6,width = 8)
 
 
 # __ trend persona-fecha_visita ------------------------------------------------

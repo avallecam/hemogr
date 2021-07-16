@@ -106,7 +106,8 @@ hem_diff_plot <- hem %>%
   mutate(key_2=case_when(
     key == "hto." ~ "Hematocrit~('%')",
     key == "leuco." ~ "White~blood~cells~(10^{3}/mm^{3})",
-    key == "abaston." ~ "Neutrophils~(band~cells)~('%')",
+    # key == "abaston." ~ "Neutrophils~(band~cells)~('%')",
+    key == "abaston." ~ "Band~cells~('%')",
     key == "segment." ~ "Neutrophils~('%')",
     key == "eosinof." ~ "Eosinophils~('%')",
     key == "linfocit." ~ "Limphocytes~('%')",
@@ -172,7 +173,8 @@ hem_dist_plot <- hem %>%
   mutate(key_2=case_when(
     key == "hto." ~ "Hematocrit~('%')",
     key == "leuco." ~ "White~blood~cells~(10^{3}/mm^{3})",
-    key == "abaston." ~ "Neutrophils~(band~cells)~('%')",
+    # key == "abaston." ~ "Neutrophils~(band~cells)~('%')",
+    key == "abaston." ~ "Band~cells~('%')",
     key == "segment." ~ "Neutrophils~('%')",
     key == "eosinof." ~ "Eosinophils~('%')",
     key == "linfocit." ~ "Limphocytes~('%')",

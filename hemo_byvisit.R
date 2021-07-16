@@ -83,7 +83,7 @@ hem %>%
 
 # differences -------------------------------------------------------------
 
-hem %>% 
+hem_diff_plot <- hem %>% 
   filter(group!="control") %>% 
   select(-edad, -sexo, -fecha,-diff_fecha) %>% 
   pivot_longer(cols = -c(new.code,group,num.visita),
@@ -129,14 +129,20 @@ hem %>%
                              "2 vs 1"="diff_2_1",
                              "3 vs 1"="diff_3_1",
                              "3 vs 2"="diff_3_2"
-                             )) %>% 
-  
+                             )) 
+
+hem_diff_plot %>% 
+  # filter(magrittr::is_in(x = key,table = c("basofil.",
+  #                                          "monocit.",
+  #                                          "abaston."))) %>%
+  # ggplot(aes(x = value,fill=group)) + geom_histogram() + facet_grid(interval~outcome)
   ggplot(aes(x = interval,y = value,color=group)) +
   geom_violin(alpha=0,lwd=0.4) +
   geom_point(position = position_jitterdodge(),alpha=0.2) +
   facet_wrap(~outcome,scales = "free",
              labeller = label_parsed) +
   geom_hline(aes(yintercept=0)) +
+  # scale_y_log10() +
   labs(title = "Subject Differences in the Trend of hematological profiles",
        subtitle = "Between Visits at baseline, day 7 and 28",
        colour="Plasmodium\nspecie infection",
@@ -145,8 +151,19 @@ hem %>%
   theme(legend.text = element_text(face = "italic"))
 ggsave("figure/03-visit_violin-difference.png",height = 6,width = 8)
 
+# ___ problematic distributions
+
+hem_diff_plot %>% 
+  filter(magrittr::is_in(x = key,table = c("basofil.",
+                                           "monocit.",
+                                           "abaston."))) %>%
+  ggplot(aes(x = value,fill=group)) + 
+  geom_histogram() + 
+  facet_grid(interval~outcome)
+
 # __ grupo-numero_visita ------------------------------------------------
-hem %>% 
+
+hem_dist_plot <- hem %>% 
   filter(group!="control") %>% 
   select(-fecha,-edad, -sexo) %>% 
   gather(key,value,-new.code,-group, -diff_fecha, -num.visita) %>% 
@@ -168,7 +185,9 @@ hem %>%
     group=="pfal"~"P. falciparum",
     group=="pviv"~"P. vivax",
     TRUE~group
-  )) %>% 
+  )) 
+
+hem_dist_plot %>% 
   #mutate(value=if_else(value==0,0.1,value)) %>% 
   ggplot(aes(num.visita,value,colour=group)) +
   #geom_line() +
@@ -183,6 +202,15 @@ hem %>%
   theme(legend.text = element_text(face = "italic"))
 ggsave("figure/02-visit_violin.png",height = 6,width = 8)
 
+# ___ problematic distributions
+
+hem_dist_plot %>% 
+  filter(magrittr::is_in(x = key,table = c("basofil.",
+                                           "monocit.",
+                                           "abaston."))) %>%
+  ggplot(aes(x = value,fill=group)) + 
+  geom_histogram() + 
+  facet_grid(num.visita~key_2)
 
 # __ trend persona-fecha_visita ------------------------------------------------
 hem %>% 

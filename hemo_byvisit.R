@@ -124,11 +124,12 @@ hem %>%
   
   mutate(interval=fct_relevel(interval,
                               "diff_2_1",
-                              "diff_3_2")) %>% 
+                              "diff_3_1")) %>% 
   mutate(interval=fct_recode(interval,
                              "2 vs 1"="diff_2_1",
-                             "3 vs 2"="diff_3_2",
-                             "3 vs 1"="diff_3_1")) %>% 
+                             "3 vs 1"="diff_3_1",
+                             "3 vs 2"="diff_3_2"
+                             )) %>% 
   
   ggplot(aes(x = interval,y = value,color=group)) +
   geom_violin(alpha=0,lwd=0.4) +

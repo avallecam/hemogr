@@ -80,8 +80,8 @@ compareGroups(~ num.visita +
                           basofil.= 2, edad = 2
               )
 ) %>% 
-  createTable(show.all = T, show.n = T) #%>% 
-#export2xls("table/z0-tab1_ind_r05.xls")
+  createTable(show.all = T, show.n = T, digits = 1) %>% 
+  export2xls("table/h0-tab1_null.xls")
 
 #hem %>% count(abaston.,group) %>% arrange(abaston.) %>% spread(group,n) %>% print(n=Inf)
 
@@ -105,8 +105,8 @@ compareGroups(group ~ sexo + edad +
                           basofil.= 2, edad = 2
               )
 ) %>% 
-  createTable(show.all = F, show.n = F, show.p.mul = T) #%>% 
-#export2xls("table/z0-tab1_ind_r05.xls")
+  createTable(show.all = F, show.n = F, show.p.mul = T, digits = 1) %>% 
+  export2xls("table/h0-tab1_groups.xls")
 
 # complete case analysis --------------------------------------------------
 
@@ -138,37 +138,63 @@ glm.full <- glm(hto. ~ group + edad + sexo
                 , data = hem_cc_viv, family = gaussian(link = "identity"))
 glm.full %>% tidy()
 glm.full %>% confint_tidy()
+epitidy::epi_tidymodel_coef(model_output = glm.full,digits = 2)
 
 #hem_cc_viv %>% count(leuco.)
 glm.full <- glm(leuco. ~ group + edad + sexo
                 , data = hem_cc_viv, family = gaussian(link = "identity"))
 glm.full %>% tidy()
 glm.full %>% confint_tidy()
+epitidy::epi_tidymodel_coef(model_output = glm.full,digits = 2)
 
 #hem_cc_viv %>% count(abaston.)
 glm.full <- glm(abaston. ~ group + edad + sexo
                 , data = hem_cc_viv, family = gaussian(link = "identity"))
 glm.full %>% tidy()
 glm.full %>% confint_tidy()
+epitidy::epi_tidymodel_coef(model_output = glm.full,digits = 2)
 
 #hem_cc_viv %>% count(segment.)
 glm.full <- glm(segment. ~ group + edad + sexo
                 , data = hem_cc_viv, family = gaussian(link = "identity"))
 glm.full %>% tidy()
 glm.full %>% confint_tidy()
+epitidy::epi_tidymodel_coef(model_output = glm.full,digits = 2)
 
 #hem_cc_viv %>% count(eosinof.)
 glm.full <- glm(eosinof. ~ group + edad + sexo
                 , data = hem_cc_viv, family = gaussian(link = "identity"))
 glm.full %>% tidy()
 glm.full %>% confint_tidy()
+epitidy::epi_tidymodel_coef(model_output = glm.full,digits = 2)
 
-hem_cc_viv %>% count(plaqueta)
+# hem_cc_viv %>% count(linfocit.)
+glm.full <- glm(linfocit. ~ group + edad + sexo
+                , data = hem_cc_viv, family = gaussian(link = "identity"))
+glm.full %>% tidy()
+glm.full %>% confint_tidy()
+epitidy::epi_tidymodel_coef(model_output = glm.full,digits = 2)
+
+# hem_cc_viv %>% count(plaqueta)
 glm.full <- glm(plaqueta ~ group + edad + sexo
                 , data = hem_cc_viv, family = gaussian(link = "identity"))
 glm.full %>% tidy()
 glm.full %>% confint_tidy()
+epitidy::epi_tidymodel_coef(model_output = glm.full,digits = 2)
 
+# new ---
+
+glm.full <- glm(monocit. ~ group + edad + sexo
+                , data = hem_cc_fal, family = gaussian(link = "identity"))
+glm.full %>% tidy()
+glm.full %>% confint_tidy()
+epitidy::epi_tidymodel_coef(model_output = glm.full,digits = 2)
+
+glm.full <- glm(basofil. ~ group + edad + sexo
+                , data = hem_cc_fal, family = gaussian(link = "identity"))
+glm.full %>% tidy()
+glm.full %>% confint_tidy()
+epitidy::epi_tidymodel_coef(model_output = glm.full,digits = 2)
 
 # pendientes -no urgentes- ------------------------------------------------
 
@@ -176,3 +202,48 @@ glm.full %>% confint_tidy()
 #' ( ) actualizar modelamiento con funciones de avallecam: epi_tidymodel or epi_tidymodel_up
 #' ( ) exportar tablas
 
+
+# plot only baseline ----------------------------------------------------------------
+
+hem %>% 
+  # filter(group!="control") %>% 
+  select(-fecha,-num.visita, -edad, -sexo,-diff_fecha) %>% 
+  gather(key,value,-new.code,-group) %>% 
+  mutate(value=as.numeric(value)) %>% 
+  
+  mutate(key_2=case_when(
+    key == "hto." ~ "Hematocrit~('%')",
+    key == "leuco." ~ "White~blood~cells~(10^{3}/mm^{3})",
+    # key == "abaston." ~ "Neutrophils~(band~cells)~('%')",
+    key == "abaston." ~ "Band~cells~('%')",
+    key == "segment." ~ "Neutrophils~('%')",
+    key == "eosinof." ~ "Eosinophils~('%')",
+    key == "linfocit." ~ "Lymphocytes~('%')",
+    key == "plaqueta" ~ "Platelets~(10^{4}/mm^{3})",
+    key == "monocit." ~ "Monocites~('%')",
+    key == "basofil." ~ "Basophils~('%')", #
+    TRUE ~ key
+  )) %>% 
+  rename(outcome=key_2) %>%
+  mutate(group=case_when(
+    group=="pfal"~"P. falciparum",
+    group=="pviv"~"P. vivax",
+    group=="control"~"Control",
+    TRUE~group
+  )) %>% 
+  
+  ggplot(aes(x = group,y = value, colour=group)) +
+  geom_point(position = position_jitterdodge(),alpha=0.2)+
+  geom_violin(alpha=0,lwd=0.4#,draw_quantiles = c(0.25,0.5,0.75)
+              ) +
+  scale_color_manual(values = c("#00BA38", "#F8766D", "#619CFF")) +
+  facet_wrap(~outcome,scales = "free_y",
+             labeller = label_parsed) +
+  labs(title = "Baseline values of hematological profiles",
+       subtitle = "Between controls, Plasmodium falciparum and P. vivax infected subjects",
+       colour="Plasmodium\nspecie infection",
+       y="Value",
+       x="Group")+
+  theme(legend.text = element_text(face = "italic"),
+        axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+ggsave("figure/04-group_violin-values.png",height = 6,width = 8,dpi = "retina")

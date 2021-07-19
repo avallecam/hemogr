@@ -110,7 +110,7 @@ hem_diff_plot <- hem %>%
     key == "abaston." ~ "Band~cells~('%')",
     key == "segment." ~ "Neutrophils~('%')",
     key == "eosinof." ~ "Eosinophils~('%')",
-    key == "linfocit." ~ "Limphocytes~('%')",
+    key == "linfocit." ~ "Lymphocytes~('%')",
     key == "plaqueta" ~ "Platelets~(10^{4}/mm^{3})",
     key == "monocit." ~ "Monocites~('%')",
     key == "basofil." ~ "Basophils~('%')", #
@@ -138,7 +138,8 @@ hem_diff_plot %>%
   #                                          "abaston."))) %>%
   # ggplot(aes(x = value,fill=group)) + geom_histogram() + facet_grid(interval~outcome)
   ggplot(aes(x = interval,y = value,color=group)) +
-  geom_violin(alpha=0,lwd=0.4) +
+  geom_violin(alpha=0,lwd=0.4#,draw_quantiles = c(0.5)
+              ) +
   geom_point(position = position_jitterdodge(),alpha=0.2) +
   facet_wrap(~outcome,scales = "free",
              labeller = label_parsed) +
@@ -150,7 +151,7 @@ hem_diff_plot %>%
        y="Difference",
        x="Visit Intervals")+
   theme(legend.text = element_text(face = "italic"))
-ggsave("figure/03-visit_violin-difference.png",height = 6,width = 8)
+ggsave("figure/03-visit_violin-difference.png",height = 6,width = 8,dpi = "retina")
 
 # ___ problematic distributions
 
@@ -177,7 +178,7 @@ hem_dist_plot <- hem %>%
     key == "abaston." ~ "Band~cells~('%')",
     key == "segment." ~ "Neutrophils~('%')",
     key == "eosinof." ~ "Eosinophils~('%')",
-    key == "linfocit." ~ "Limphocytes~('%')",
+    key == "linfocit." ~ "Lymphocytes~('%')",
     key == "plaqueta" ~ "Platelets~(10^{4}/mm^{3})",
     key == "monocit." ~ "Monocites~('%')",
     key == "basofil." ~ "Basophils~('%')", #
@@ -194,7 +195,8 @@ hem_dist_plot %>%
   ggplot(aes(num.visita,value,colour=group)) +
   #geom_line() +
   geom_point(position = position_jitterdodge(),alpha=0.2) +
-  geom_violin(alpha=0,lwd=0.4) +
+  geom_violin(alpha=0,lwd=0.4#,draw_quantiles = c(0.5)
+              ) +
   facet_wrap(~key_2,scales = "free_y",labeller = label_parsed) +
   labs(title = "Trend of hematological profiles",
        subtitle = "Visits at baseline, day 7 and 28",
@@ -202,7 +204,7 @@ hem_dist_plot %>%
   #scale_y_log10() +
   xlab("Visit number") + ylab("Value")+
   theme(legend.text = element_text(face = "italic"))
-ggsave("figure/02-visit_violin.png",height = 6,width = 8)
+ggsave("figure/02-visit_violin.png",height = 6,width = 8,dpi = "retina")
 
 # ___ problematic distributions
 
@@ -250,7 +252,7 @@ hem %>%
   ) +
   labs(title = "Trend of hematological profiles") +
   xlab("Time of follow-up") + ylab("Value")
-ggsave("figure/01-trend_plot-by_group.png",height = 6,width = 12)
+ggsave("figure/01-trend_plot-by_group.png",height = 6,width = 12,dpi = "retina")
 
 # tabla 2: por visita Pv+Pf -----------------------------------------------------
 

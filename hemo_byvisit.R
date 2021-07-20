@@ -141,8 +141,10 @@ hem_diff_plot %>%
   geom_violin(alpha=0,lwd=0.4#,draw_quantiles = c(0.5)
               ) +
   geom_point(position = position_jitterdodge(),alpha=0.2) +
-  facet_wrap(~outcome,scales = "free",
+  facet_wrap(~outcome,scales = "free_y",
              labeller = label_parsed) +
+  # facet_wrap(~outcome,scales = "free",
+  #            labeller = label_parsed) +
   geom_hline(aes(yintercept=0)) +
   # scale_y_log10() +
   labs(title = "Subject Differences in the Trend of hematological profiles",
@@ -197,7 +199,8 @@ hem_dist_plot %>%
   geom_point(position = position_jitterdodge(),alpha=0.2) +
   geom_violin(alpha=0,lwd=0.4#,draw_quantiles = c(0.5)
               ) +
-  facet_wrap(~key_2,scales = "free_y",labeller = label_parsed) +
+  facet_wrap(~key_2,scales = "free_y",
+             labeller = label_parsed) +
   labs(title = "Trend of hematological profiles",
        subtitle = "Visits at baseline, day 7 and 28",
        colour="Plasmodium\nspecie infection") +

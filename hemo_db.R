@@ -206,3 +206,5 @@ hem %>% count(new.code,group,sort = T) %>% count(group,n) #visitas para casos
 
 write_rds(hem,"data/hemdb.rds")
 
+read_rds("data/hemdb.rds") %>% writexl::write_xlsx("data-raw/hemdb-visitas.xlsx")
+read_rds("data/hemdb.rds") %>% count(new.code,group) %>% writexl::write_xlsx("data-raw/hemdb-participantes.xlsx")

@@ -228,7 +228,7 @@ hem %>%
   mutate(group=case_when(
     group=="pfal"~"P. falciparum",
     group=="pviv"~"P. vivax",
-    group=="control"~"Control",
+    group=="control"~"Negative",
     TRUE~group
   )) %>% 
   
@@ -240,7 +240,7 @@ hem %>%
   facet_wrap(~outcome,scales = "free_y",
              labeller = label_parsed) +
   labs(title = "Baseline values of hematological profiles",
-       subtitle = "Between controls, Plasmodium falciparum and P. vivax infected subjects",
+       subtitle = "Between negatives, Plasmodium falciparum and P. vivax infected subjects",
        colour="Plasmodium\nspecie infection",
        y="Value",
        x="Group")+

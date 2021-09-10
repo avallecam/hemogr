@@ -105,6 +105,7 @@ hem %>%
              color = group)) +
   geom_line() +
   facet_wrap(~group)
+ggsave("figure/05-f1-temp_visita-trend.png",height = 3,width = 4,dpi = "retina")
 
 hem %>% 
   filter(group!="control") %>% 
@@ -115,7 +116,7 @@ hem %>%
   geom_violin() +
   ggbeeswarm::geom_quasirandom(method = "tukeyDense",
                                dodge.width = 0.9)
-
+ggsave("figure/05-f2-temp_visita-dist.png",height = 3,width = 4,dpi = "retina")
 
 # trofozoitos -------------------------------------------------------------
 
@@ -127,6 +128,7 @@ hem %>%
              color = group)) +
   geom_line() +
   facet_wrap(~group)
+ggsave("figure/05-f3-trofo_visita-trend.png",height = 3,width = 4,dpi = "retina")
 
 hem %>% 
   filter(group!="control") %>% 
@@ -137,7 +139,7 @@ hem %>%
   geom_violin() +
   ggbeeswarm::geom_quasirandom(method = "tukeyDense",
                                dodge.width = 0.9)
-
+ggsave("figure/05-f4-trofo_visita-dist.png",height = 3,width = 4,dpi = "retina")
 
 # gametocitos -------------------------------------------------------------
 
@@ -149,6 +151,7 @@ hem %>%
              color = group)) +
   geom_line() +
   facet_wrap(~group)
+ggsave("figure/05-f5-gameto_visita-trend.png",height = 3,width = 4,dpi = "retina")
 
 hem %>% 
   filter(group!="control") %>% 
@@ -159,6 +162,7 @@ hem %>%
   geom_violin() +
   ggbeeswarm::geom_quasirandom(method = "tukeyDense",
                                dodge.width = 0.9)
+ggsave("figure/05-f6-gameto_visita-dist.png",height = 3,width = 4,dpi = "retina")
 
 hem %>% 
   filter(group!="control") %>% 
@@ -169,6 +173,7 @@ hem %>%
   geom_violin() +
   ggbeeswarm::geom_quasirandom(method = "tukeyDense",
                                dodge.width = 0.9)
+ggsave("figure/05-f7-gameto_with-distr.png",height = 3,width = 4,dpi = "retina")
 
 hem %>% 
   filter(group!="control") %>% 
@@ -180,7 +185,7 @@ hem %>%
   ggbeeswarm::geom_quasirandom(method = "tukeyDense",
                                dodge.width = 0.9) +
   facet_wrap(~group)
-
+ggsave("figure/05-f8-gameto_with_sp-distr.png",height = 3,width = 6,dpi = "retina")
 
 # cruces ------------------------------------------------------------------
 
@@ -199,6 +204,7 @@ hem %>%
   # scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
   theme(panel.grid.major = element_blank(),
         panel.grid.minor = element_blank())
+ggsave("figure/05-f9-cruces_visita-distr.png",height = 3,width = 4,dpi = "retina")
 
 hem %>% 
   filter(group!="control") %>% 
@@ -215,7 +221,7 @@ hem %>%
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
   theme(panel.grid.major = element_blank(),
         panel.grid.minor = element_blank())
-
+ggsave("figure/05-f10-cruces_visita-frec.png",height = 3,width = 4,dpi = "retina")
 
 # gametocitos -------------------------------------------------------------
 
@@ -234,4 +240,4 @@ hem %>%
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
   theme(panel.grid.major = element_blank(),
         panel.grid.minor = element_blank())
-
+ggsave("figure/05-f11-gameto_visita-frec.png",height = 3,width = 4,dpi = "retina")

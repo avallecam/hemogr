@@ -208,6 +208,7 @@ hem_dist_plot %>%
   xlab("Visit number") + ylab("Value")+
   theme(legend.text = element_text(face = "italic"))
 ggsave("figure/02-visit_violin.png",height = 6,width = 8,dpi = "retina")
+ggsave("figure/02-visit_violin.tiff",height = 6,width = 8,dpi = "retina")
 
 # ___ problematic distributions
 

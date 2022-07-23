@@ -136,64 +136,55 @@ hem_cc_fal %>% count(group)
 #hem_cc_viv %>% count(hto.)
 glm.full <- glm(hto. ~ group + edad + sexo
                 , data = hem_cc_viv, family = gaussian(link = "identity"))
-glm.full %>% tidy()
-glm.full %>% confint_tidy()
+glm.full %>% tidy(conf.int=TRUE)
 epitidy::epi_tidymodel_coef(model_output = glm.full,digits = 2)
 
 #hem_cc_viv %>% count(leuco.)
 glm.full <- glm(leuco. ~ group + edad + sexo
                 , data = hem_cc_viv, family = gaussian(link = "identity"))
-glm.full %>% tidy()
-glm.full %>% confint_tidy()
+glm.full %>% tidy(conf.int=TRUE)
 epitidy::epi_tidymodel_coef(model_output = glm.full,digits = 2)
 
 #hem_cc_viv %>% count(abaston.)
 glm.full <- glm(abaston. ~ group + edad + sexo
                 , data = hem_cc_viv, family = gaussian(link = "identity"))
-glm.full %>% tidy()
-glm.full %>% confint_tidy()
+glm.full %>% tidy(conf.int=TRUE)
 epitidy::epi_tidymodel_coef(model_output = glm.full,digits = 2)
 
 #hem_cc_viv %>% count(segment.)
 glm.full <- glm(segment. ~ group + edad + sexo
                 , data = hem_cc_viv, family = gaussian(link = "identity"))
-glm.full %>% tidy()
-glm.full %>% confint_tidy()
+glm.full %>% tidy(conf.int=TRUE)
 epitidy::epi_tidymodel_coef(model_output = glm.full,digits = 2)
 
 #hem_cc_viv %>% count(eosinof.)
 glm.full <- glm(eosinof. ~ group + edad + sexo
                 , data = hem_cc_viv, family = gaussian(link = "identity"))
-glm.full %>% tidy()
-glm.full %>% confint_tidy()
+glm.full %>% tidy(conf.int=TRUE)
 epitidy::epi_tidymodel_coef(model_output = glm.full,digits = 2)
 
 # hem_cc_viv %>% count(linfocit.)
 glm.full <- glm(linfocit. ~ group + edad + sexo
                 , data = hem_cc_viv, family = gaussian(link = "identity"))
-glm.full %>% tidy()
-glm.full %>% confint_tidy()
+glm.full %>% tidy(conf.int=TRUE)
 epitidy::epi_tidymodel_coef(model_output = glm.full,digits = 2)
 
 # hem_cc_viv %>% count(plaqueta)
 glm.full <- glm(plaqueta ~ group + edad + sexo
                 , data = hem_cc_viv, family = gaussian(link = "identity"))
-glm.full %>% tidy()
-glm.full %>% confint_tidy()
+glm.full %>% tidy(conf.int=TRUE)
 epitidy::epi_tidymodel_coef(model_output = glm.full,digits = 2)
 
 # new ---
 
 glm.full <- glm(monocit. ~ group + edad + sexo
                 , data = hem_cc_fal, family = gaussian(link = "identity"))
-glm.full %>% tidy()
-glm.full %>% confint_tidy()
+glm.full %>% tidy(conf.int=TRUE)
 epitidy::epi_tidymodel_coef(model_output = glm.full,digits = 2)
 
 glm.full <- glm(basofil. ~ group + edad + sexo
                 , data = hem_cc_fal, family = gaussian(link = "identity"))
-glm.full %>% tidy()
-glm.full %>% confint_tidy()
+glm.full %>% tidy(conf.int=TRUE)
 epitidy::epi_tidymodel_coef(model_output = glm.full,digits = 2)
 
 # pendientes -no urgentes- ------------------------------------------------

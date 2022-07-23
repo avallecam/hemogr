@@ -173,17 +173,30 @@ hem_dist_plot <- hem %>%
   gather(key,value,-new.code,-group, -diff_fecha, -num.visita) %>% 
   mutate(value=as.numeric(value),
          num.visita=as.factor(num.visita)) %>% 
+  # mutate(key_2=case_when(
+  #   key == "hto." ~ "Hematocrit~('%')",
+  #   key == "leuco." ~ "White~blood~cells~(10^{3}/mm^{3})",
+  #   # key == "abaston." ~ "Neutrophils~(band~cells)~('%')",
+  #   key == "abaston." ~ "Band~cells~('%')",
+  #   key == "segment." ~ "Neutrophils~('%')",
+  #   key == "eosinof." ~ "Eosinophils~('%')",
+  #   key == "linfocit." ~ "Lymphocytes~('%')",
+  #   key == "plaqueta" ~ "Platelets~(10^{4}/mm^{3})",
+  #   key == "monocit." ~ "Monocites~('%')",
+  #   key == "basofil." ~ "Basophils~('%')",
+  #   TRUE ~ key
+  # )) %>% 
   mutate(key_2=case_when(
-    key == "hto." ~ "Hematocrit~('%')",
-    key == "leuco." ~ "White~blood~cells~(10^{3}/mm^{3})",
+    key == "hto." ~ "Hematocrito~('%')",
+    key == "leuco." ~ "Leucocitos~(10^{3}/mm^{3})",
     # key == "abaston." ~ "Neutrophils~(band~cells)~('%')",
-    key == "abaston." ~ "Band~cells~('%')",
-    key == "segment." ~ "Neutrophils~('%')",
-    key == "eosinof." ~ "Eosinophils~('%')",
-    key == "linfocit." ~ "Lymphocytes~('%')",
-    key == "plaqueta" ~ "Platelets~(10^{4}/mm^{3})",
-    key == "monocit." ~ "Monocites~('%')",
-    key == "basofil." ~ "Basophils~('%')", #
+    key == "abaston." ~ "Abastonados~('%')",
+    key == "segment." ~ "Neutrófilos~('%')",
+    key == "eosinof." ~ "Eosinófilos~('%')",
+    key == "linfocit." ~ "Linfocitos~('%')",
+    key == "plaqueta" ~ "Plaquetas~(10^{4}/mm^{3})",
+    key == "monocit." ~ "Monocitos~('%')",
+    key == "basofil." ~ "Basófilos~('%')", #
     TRUE ~ key
   )) %>% 
   mutate(group=case_when(
@@ -201,11 +214,16 @@ hem_dist_plot %>%
               ) +
   facet_wrap(~key_2,scales = "free_y",
              labeller = label_parsed) +
-  labs(title = "Trend of hematological profiles",
-       subtitle = "Visits at baseline, day 7 and 28",
-       colour="Plasmodium\nspecie infection") +
+  # labs(title = "Trend of hematological profiles",
+  #      subtitle = "Visits at baseline, day 7 and 28",
+  #      colour="Plasmodium\nspecie infection") +
+  # xlab("Visit number") + ylab("Value") +
+  labs(
+    x = "Número de visita*",
+    y = "Valor",
+    caption = "* (1) día 0, (2) día 7, (3) día 28",
+    colour="Infección por\nespecie de\nPlasmodium") +
   #scale_y_log10() +
-  xlab("Visit number") + ylab("Value")+
   theme(legend.text = element_text(face = "italic"))
 ggsave("figure/02-visit_violin.png",height = 6,width = 8,dpi = "retina")
 ggsave("figure/02-visit_violin.tiff",height = 6,width = 8,dpi = "retina")

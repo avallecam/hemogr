@@ -189,8 +189,9 @@ epitidy::epi_tidymodel_coef(model_output = glm.full,digits = 2)
 
 # pendientes -no urgentes- ------------------------------------------------
 
+#' (x) actualizar modelamiento con funciones de avallecam: epi_tidymodel or epi_tidymodel_up
+#' ( ) dar formato de salida en R!
 #' ( ) modelos para pfal
-#' ( ) actualizar modelamiento con funciones de avallecam: epi_tidymodel or epi_tidymodel_up
 #' ( ) exportar tablas
 
 
@@ -238,3 +239,41 @@ hem %>%
   theme(legend.text = element_text(face = "italic"),
         axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
 ggsave("figure/04-group_violin-values.png",height = 6,width = 8,dpi = "retina")
+
+
+# mutiples modelos multiples ----------------------------------------------
+
+# vivax -------------------------------------------------------------------
+
+var_dependent <- hem_cc_viv %>%
+  select(group, edad, sexo) %>% 
+  #transform columnames to tibble
+  colnames() %>% 
+  paste(., collapse=" + ")
+
+hem_cc_viv %>%
+  select(hto.:plaqueta) %>% 
+  #transform columnames to tibble
+  colnames() %>%
+  enframe(name = NULL) %>%
+  mutate(all_outcomes = map(.x = value,
+                            .f = ~paste(.x,var_dependent,sep=" ~ ")),
+         all_formulas = map(.x = all_outcomes,
+                            .f = as.formula)) %>%
+  # identity()
+  # pull(all_formulas)
+  mutate(all_multiple = map(.x = all_formulas,
+                        .f = ~glm(formula = .x,
+                                  data = hem_cc_viv, 
+                                  family = gaussian(link = "identity")))) %>% 
+  # pull(all_multiple)
+  #tidy up the results
+  mutate(simple_tidy=map(.x = all_multiple, .f = epi_tidymodel_coef)
+  ) %>%
+  #unnest coefficients
+  unnest(cols = c(simple_tidy)) %>%
+  #filter out intercepts
+  filter(term!="(Intercept)") %>% 
+  filter(term!="edad") %>% 
+  filter(term!="sexoM") %>% 
+  select(-c(all_outcomes:term,se))

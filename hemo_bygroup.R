@@ -190,9 +190,9 @@ epitidy::epi_tidymodel_coef(model_output = glm.full,digits = 2)
 # pendientes -no urgentes- ------------------------------------------------
 
 #' (x) actualizar modelamiento con funciones de avallecam: epi_tidymodel or epi_tidymodel_up
-#' ( ) dar formato de salida en R!
-#' ( ) modelos para pfal
-#' ( ) exportar tablas
+#' (x) dar formato de salida en R!
+#' (x) modelos para pfal
+#' (x) exportar tablas
 
 
 # plot only baseline ----------------------------------------------------------------
@@ -251,17 +251,19 @@ var_dependent <- hem_cc_viv %>%
   colnames() %>% 
   paste(., collapse=" + ")
 
-hem_cc_viv %>%
-  select(hto.:plaqueta) %>% 
+multiple_model_pviv <- hem_cc_viv %>%
+  select(hto.:eosinof.,linfocit.,plaqueta,monocit.,basofil.) %>% 
   #transform columnames to tibble
   colnames() %>%
   enframe(name = NULL) %>%
+  # crear formulas
   mutate(all_outcomes = map(.x = value,
                             .f = ~paste(.x,var_dependent,sep=" ~ ")),
          all_formulas = map(.x = all_outcomes,
                             .f = as.formula)) %>%
   # identity()
   # pull(all_formulas)
+  # ejecutar regresiones multiples
   mutate(all_multiple = map(.x = all_formulas,
                         .f = ~glm(formula = .x,
                                   data = hem_cc_viv, 
@@ -276,4 +278,64 @@ hem_cc_viv %>%
   filter(term!="(Intercept)") %>% 
   filter(term!="edad") %>% 
   filter(term!="sexoM") %>% 
-  select(-c(all_outcomes:term,se))
+  select(-c(all_outcomes:term,se)) %>% 
+  # formato de tabla de salida
+  mutate(across(.cols = estimate:conf.high,
+                .fns = round, digits=2,.names = "{.col}_x")) %>% 
+  mutate(p.value_x = round(p.value,digits = 3)) %>% 
+  #join confidence intervals
+  mutate(conf_int_x = str_c(conf.low_x," to ",conf.high_x)) %>% 
+  select(value, estimate_x,conf_int_x,p.value_x,everything())
+
+
+# falciparum --------------------------------------------------------------
+
+var_dependent <- hem_cc_fal %>%
+  select(group, edad, sexo) %>% 
+  #transform columnames to tibble
+  colnames() %>% 
+  paste(., collapse=" + ")
+
+multiple_model_pfal <- hem_cc_fal %>%
+  select(hto.:eosinof.,linfocit.,plaqueta,monocit.,basofil.) %>% 
+  #transform columnames to tibble
+  colnames() %>%
+  enframe(name = NULL) %>%
+  # crear formulas
+  mutate(all_outcomes = map(.x = value,
+                            .f = ~paste(.x,var_dependent,sep=" ~ ")),
+         all_formulas = map(.x = all_outcomes,
+                            .f = as.formula)) %>%
+  # identity()
+  # pull(all_formulas)
+  # ejecutar regresiones multiples
+  mutate(all_multiple = map(.x = all_formulas,
+                            .f = ~glm(formula = .x,
+                                      data = hem_cc_fal, 
+                                      family = gaussian(link = "identity")))) %>% 
+  # pull(all_multiple)
+  #tidy up the results
+  mutate(simple_tidy=map(.x = all_multiple, .f = epi_tidymodel_coef)
+  ) %>%
+  #unnest coefficients
+  unnest(cols = c(simple_tidy)) %>%
+  #filter out intercepts
+  filter(term!="(Intercept)") %>% 
+  filter(term!="edad") %>% 
+  filter(term!="sexoM") %>% 
+  select(-c(all_outcomes:term,se)) %>% 
+  # formato de tabla de salida
+  mutate(across(.cols = estimate:conf.high,
+                .fns = round, digits=2,.names = "{.col}_x")) %>% 
+  mutate(p.value_x = round(p.value,digits = 3)) %>% 
+  #join confidence intervals
+  mutate(conf_int_x = str_c(conf.low_x," to ",conf.high_x)) %>% 
+  select(value, estimate_x,conf_int_x,p.value_x,everything())
+
+# exportar tablas ---------------------------------------------------------
+
+multiple_model_pviv %>% 
+  writexl::write_xlsx("table/g0-tab02-pviv-multiple_regressions.xlsx")
+multiple_model_pfal %>% 
+  writexl::write_xlsx("table/g0-tab02-pfal-multiple_regressions.xlsx")
+  

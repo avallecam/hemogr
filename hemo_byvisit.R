@@ -23,7 +23,9 @@ library(broom)
 library(rlang)
 library(geepack)
 library(geeM)
-library(avallecam)
+# library(avallecam)
+if(!require(pacman)) install.packages("pacman")
+pacman::p_load_gh('avallecam/epihelper')
 
 rm(list = ls())
 theme_set(theme_bw())
@@ -188,10 +190,10 @@ hem_dist_plot <- hem %>%
   # )) %>% 
   mutate(key_2=case_when(
     key == "hto." ~ "Hematocrito~('%')",
-    key == "leuco." ~ "Leucocitos~(10^{3}/mm^{3})",
+    key == "leuco." ~ "RGB~(10^{3}/mm^{3})",
     # key == "abaston." ~ "Neutrophils~(band~cells)~('%')",
     key == "abaston." ~ "Abastonados~('%')",
-    key == "segment." ~ "Neutrófilos~('%')",
+    key == "segment." ~ "Segmentados~('%')",
     key == "eosinof." ~ "Eosinófilos~('%')",
     key == "linfocit." ~ "Linfocitos~('%')",
     key == "plaqueta" ~ "Plaquetas~(10^{4}/mm^{3})",
@@ -221,7 +223,7 @@ hem_dist_plot %>%
   labs(
     x = "Número de visita*",
     y = "Valor",
-    caption = "* (1) día 0, (2) día 7, (3) día 28",
+    caption = "* (1) día 0, (2) día 7, (3) día 28 \n ** RGB = Recuento de Glóbulos Blancos",
     colour="Infección por\nespecie de\nPlasmodium") +
   #scale_y_log10() +
   theme(legend.text = element_text(face = "italic"))

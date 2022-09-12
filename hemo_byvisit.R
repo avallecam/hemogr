@@ -79,7 +79,7 @@ hem %>%
   #geom_line() +
   geom_point(aes(colour=group),alpha=0.5
              #position = position_jitter()
-             ) +
+  ) +
   #geom_boxplot(aes(group=diff_fecha),alpha=0) +
   facet_wrap(~key,scales = "free_y")
 
@@ -132,7 +132,7 @@ hem_diff_plot <- hem %>%
                              "2 vs 1"="diff_2_1",
                              "3 vs 1"="diff_3_1",
                              "3 vs 2"="diff_3_2"
-                             )) 
+  )) 
 
 hem_diff_plot %>% 
   # filter(magrittr::is_in(x = key,table = c("basofil.",
@@ -141,7 +141,7 @@ hem_diff_plot %>%
   # ggplot(aes(x = value,fill=group)) + geom_histogram() + facet_grid(interval~outcome)
   ggplot(aes(x = interval,y = value,color=group)) +
   geom_violin(alpha=0,lwd=0.4#,draw_quantiles = c(0.5)
-              ) +
+  ) +
   geom_point(position = position_jitterdodge(),alpha=0.2) +
   facet_wrap(~outcome,scales = "free_y",
              labeller = label_parsed) +
@@ -186,21 +186,21 @@ hem_dist_plot <- hem %>%
   #   key == "plaqueta" ~ "Platelets~(10^{4}/mm^{3})",
   #   key == "monocit." ~ "Monocites~('%')",
   #   key == "basofil." ~ "Basophils~('%')",
-  #   TRUE ~ key
-  # )) %>% 
-  mutate(key_2=case_when(
-    key == "hto." ~ "Hematocrito~('%')",
-    key == "leuco." ~ "RGB~(10^{3}/mm^{3})",
-    # key == "abaston." ~ "Neutrophils~(band~cells)~('%')",
-    key == "abaston." ~ "Abastonados~('%')",
-    key == "segment." ~ "Segmentados~('%')",
-    key == "eosinof." ~ "Eosinófilos~('%')",
-    key == "linfocit." ~ "Linfocitos~('%')",
-    key == "plaqueta" ~ "Plaquetas~(10^{4}/mm^{3})",
-    key == "monocit." ~ "Monocitos~('%')",
-    key == "basofil." ~ "Basófilos~('%')", #
-    TRUE ~ key
-  )) %>% 
+#   TRUE ~ key
+# )) %>% 
+mutate(key_2=case_when(
+  key == "hto." ~ "Hematocrito~('%')",
+  key == "leuco." ~ "RGB~(10^{3}/mm^{3})",
+  # key == "abaston." ~ "Neutrophils~(band~cells)~('%')",
+  key == "abaston." ~ "Abastonados~('%')",
+  key == "segment." ~ "Segmentados~('%')",
+  key == "eosinof." ~ "Eosinófilos~('%')",
+  key == "linfocit." ~ "Linfocitos~('%')",
+  key == "plaqueta" ~ "Plaquetas~(10^{4}/mm^{3})",
+  key == "monocit." ~ "Monocitos~('%')",
+  key == "basofil." ~ "Basófilos~('%')", #
+  TRUE ~ key
+)) %>% 
   mutate(group=case_when(
     group=="pfal"~"P. falciparum",
     group=="pviv"~"P. vivax",
@@ -208,12 +208,20 @@ hem_dist_plot <- hem %>%
   )) 
 
 hem_dist_plot %>% 
+  mutate(num_visita = as.character(num.visita),
+         dia_visita = case_when(
+           num_visita == "1" ~ "dia 0",
+           num_visita == "2" ~ "dia 7",
+           num_visita == "3" ~ "dia 28")) %>%
+  mutate(new_visita = str_c("visita ",num_visita,"\n",dia_visita)) %>% 
+  # count(new_visita)
   #mutate(value=if_else(value==0,0.1,value)) %>% 
-  ggplot(aes(num.visita,value,colour=group)) +
+  ggplot(aes(new_visita,value,colour=group)) +
+  # ggplot(aes(num.visita,value,colour=group)) +
   #geom_line() +
   geom_point(position = position_jitterdodge(),alpha=0.2) +
   geom_violin(alpha=0,lwd=0.4#,draw_quantiles = c(0.5)
-              ) +
+  ) +
   facet_wrap(~key_2,scales = "free_y",
              labeller = label_parsed) +
   # labs(title = "Trend of hematological profiles",
@@ -221,9 +229,11 @@ hem_dist_plot %>%
   #      colour="Plasmodium\nspecie infection") +
   # xlab("Visit number") + ylab("Value") +
   labs(
-    x = "Número de visita*",
+    x = "",
+    # x = "Número de visita*",
     y = "Valor",
-    caption = "* (1) día 0, (2) día 7, (3) día 28 \n ** RGB = Recuento de Glóbulos Blancos",
+    # caption = "* (1) día 0, (2) día 7, (3) día 28 \n ** RGB = Recuento de Glóbulos Blancos",
+    caption = "RGB = Recuento de Glóbulos Blancos",
     colour="Infección por\nespecie de\nPlasmodium") +
   #scale_y_log10() +
   theme(legend.text = element_text(face = "italic"))
@@ -324,8 +334,8 @@ compareGroups(num.visita ~ #sexo + edad +
                           linfocit. = 2, #cercana a normal
                           plaqueta = 2,
                           basofil.= 2, edad = 2
-                          )
-              ) %>% 
+              )
+) %>% 
   createTable(show.all = F, show.n = F,show.p.trend = T, digits = 1) -> tab2_time_pv
 
 tab2_time_pv
@@ -350,8 +360,8 @@ compareGroups(num.visita ~ #sexo + edad +
                           linfocit. = 2, #cercana a normal
                           plaqueta = 2,
                           basofil.= 2, edad = 2
-                          )
-              ) %>% 
+              )
+) %>% 
   createTable(show.all = F, show.n = F, show.p.trend = T, digits = 1) -> tab2_time_pf
 
 tab2_time_pf
@@ -574,9 +584,9 @@ leuco_2 <- epi_tidymodel_coef(glm.full) %>%
 glm.full <- geem(abaston. ~ diff_fecha*group + edad + sexo,
                  data = hem_cc_trd %>% as.data.frame(), 
                  family = MASS::negative.binomial(2),
-                       id = new.code, 
-                       #waves = num.visita, 
-                       corstr = "ar1")
+                 id = new.code, 
+                 #waves = num.visita, 
+                 corstr = "ar1")
 glm.full %>% summary()
 glm.full %>% coef()
 #glm.full %>% confint()
@@ -774,7 +784,7 @@ full_t3 %>%
   arrange(
     term,
     p.value
-    )
+  )
 
 full_t3 %>% 
   filter(p.value>0.05 & p.value <=0.1) %>% 

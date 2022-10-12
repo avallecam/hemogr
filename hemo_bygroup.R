@@ -21,7 +21,9 @@ theme_set(theme_bw())
 
 # 00_ IMPORTAR ------------------------------------------------------------
 
-hem <- read_rds("data/hemdb.rds")
+hem <- read_rds("data/hemdb.rds") %>% 
+  mutate(monocit.=as.factor(monocit.),
+         basofil.=as.factor(basofil.))
 
 #hem %>% visdat::vis_dat()
 hem %>% glimpse()
